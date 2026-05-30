@@ -24,7 +24,7 @@ export const config = {
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
-  foam: { bias: 0.0, threshold: 0.0, add: 1.0, amount: 2.2 },
+  foam: { bias: 0.45, threshold: 0.0, add: 1.0, amount: 2.5 },
   colors: {
     deep: [0.02, 0.22, 0.30],        // body color of the water (deep teal)
     scatter: [0.06, 0.55, 0.52],     // turquoise SSS glow through crests

@@ -9,7 +9,7 @@ export class OrbitFollowControls {
     this.camera = camera;
     this.dom = domElement;
     this.focal = new THREE.Vector3(0, 0, 0); // world anchor (boat later)
-    this.yaw = 0; this.pitch = 0.18; this.dist = 90;
+    this.yaw = 0.5; this.pitch = 0.22; this.dist = 48;
     this.minZoom = minZoom; this.maxZoom = maxZoom; this.moveSpeed = moveSpeed;
     this.keys = new Set();
     this._dragging = false; this._lastSmoothY = 0;

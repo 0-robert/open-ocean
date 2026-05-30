@@ -37,6 +37,12 @@ export function createOceanMaterial(sky) {
     uFogFar: { value: config.fog.far },
     uDetailFadeStart: { value: config.fog.near * 0.4 },
     uDetailFadeEnd: { value: config.fog.far },
+    uFoamTex: { value: null },
+    uTime: { value: 0 },
+    uWindDir: { value: new THREE.Vector2(
+      Math.cos((config.spectrum.windDirection / 180) * Math.PI),
+      Math.sin((config.spectrum.windDirection / 180) * Math.PI),
+    ) },
   };
   for (let i = 0; i < nc; i++) {
     uniforms[`uDisp${i}`] = { value: null };
@@ -84,7 +90,9 @@ export function createOceanMaterial(sky) {
       uniform float uRoughness, uWavePeakScatterStrength, uScatterStrength;
       uniform float uScatterShadowStrength, uEnvironmentLightStrength, uBubbleDensity, uHeightModifier;
       uniform vec3 uFogColor;
-      uniform float uFogNear, uFogFar, uDetailFadeStart, uDetailFadeEnd;
+      uniform float uFogNear, uFogFar, uDetailFadeStart, uDetailFadeEnd, uTime;
+      uniform sampler2D uFoamTex;
+      uniform vec2 uWindDir;
       varying vec3 vWorldPos;
       varying vec2 vFlatXZ;
       varying float vFoam;
@@ -150,7 +158,18 @@ export function createOceanMaterial(sky) {
 
         vec3 output_ = (1.0 - F) * scatter + specular + F * envReflection;
         output_ = max(vec3(0.0), output_);
-        output_ = mix(output_, uFoamColor, foam);
+
+        // Streaky foam: break the FFT crest-foam with stretched, flow-scrolled
+        // noise so it reads as soft streaks (SoT) instead of speckle.
+        vec2 fdir = normalize(uWindDir);
+        vec2 fperp = vec2(-fdir.y, fdir.x);
+        // anisotropic UV: compressed across flow, stretched along it -> streaks
+        vec2 fuv = vec2(dot(vFlatXZ, fperp) * 0.06, dot(vFlatXZ, fdir) * 0.012);
+        float n1 = texture2D(uFoamTex, fuv + fdir * uTime * 0.03).r;
+        float n2 = texture2D(uFoamTex, fuv * 1.9 - fdir * uTime * 0.05).g;
+        float foamNoise = n1 * 0.6 + n2 * 0.4;
+        float foamMask = smoothstep(0.32, 0.85, foam * (0.35 + 1.3 * foamNoise));
+        output_ = mix(output_, uFoamColor, clamp(foamMask, 0.0, 1.0) * detailFade);
 
         float fog = smoothstep(uFogNear, uFogFar, length(cameraPosition - vWorldPos));
         gl_FragColor = vec4(mix(output_, uFogColor, fog), 1.0);

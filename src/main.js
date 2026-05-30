@@ -44,6 +44,10 @@ const skyAdapter = {
   sunColor: new THREE.Color(0xfff2dd),
 };
 const oceanMat = createOceanMaterial(skyAdapter);
+const foamTex = new THREE.TextureLoader().load('textures/waternormals.jpg', (t) => {
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+});
+oceanMat.uniforms.uFoamTex.value = foamTex;
 const water = new THREE.Mesh(new THREE.PlaneGeometry(800, 800, 1536, 1536), oceanMat);
 water.rotation.x = -Math.PI / 2;
 water.frustumCulled = false;
@@ -101,6 +105,7 @@ renderer.setAnimationLoop((now) => {
     oceanMat.uniforms[`uDisp${i}`].value = disp[i];
     oceanMat.uniforms[`uSlope${i}`].value = slope[i];
   }
+  oceanMat.uniforms.uTime.value = t;
 
   water.position.x = controls.focal.x;
   water.position.z = controls.focal.z;

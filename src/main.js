@@ -168,9 +168,10 @@ renderer.setAnimationLoop((now) => {
     oceanMat.uniforms.uBoatHalf.value.set(boat.halfLength * 1.05, boat.halfWidth * 1.25);
   }
   
-  const cameraSurfaceY = sampler.getHeightAndNormal(boat.worldX, boat.worldZ).height;
+  // Camera follows the boat. Use the boat's own smooth vertical position (NOT the
+  // async height readback, which is stepwise/laggy and makes the camera jitter).
   controls.focal.set(boat.worldX, 0, boat.worldZ);
-  controls.update(dt, cameraSurfaceY);
+  controls.update(dt, boat.y);
 
   if (dbg) {
     dbg.dbgMat.uniforms.tex.value = (debugMode === 'slope' ? sim.slopeTextures : sim.displacementTextures)[0];

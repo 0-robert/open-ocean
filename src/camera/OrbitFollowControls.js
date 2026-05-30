@@ -29,18 +29,10 @@ export class OrbitFollowControls {
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
   }
 
-  /** @param dt seconds @param surfaceY optional water height under the focal point */
+  /** @param dt seconds @param surfaceY vertical position to follow (the boat) */
   update(dt, surfaceY = 0) {
-    // WASD moves the focal point in the camera-relative horizontal plane.
-    const f = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw));
-    const r = new THREE.Vector3(f.z, 0, -f.x);
-    const move = new THREE.Vector3();
-    if (this.keys.has('KeyW')) move.sub(f);
-    if (this.keys.has('KeyS')) move.add(f);
-    if (this.keys.has('KeyA')) move.sub(r);
-    if (this.keys.has('KeyD')) move.add(r);
-    if (move.lengthSq() > 0) move.normalize().multiplyScalar(this.moveSpeed * dt);
-    this.focal.add(move);
+    // The boat drives movement; the camera just orbits its focal point (set by
+    // main). We do NOT move the focal here, or it would fight the boat each frame.
 
     // Smooth the vertical follow so wave bob doesn't induce nausea.
     this._lastSmoothY += (surfaceY - this._lastSmoothY) * Math.min(1, dt * 3);

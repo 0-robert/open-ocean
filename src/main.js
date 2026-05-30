@@ -16,7 +16,7 @@ import { Boat } from './objects/Boat.js';
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.5;
+renderer.toneMappingExposure = 0.62;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
@@ -33,8 +33,8 @@ window.__boat = boat;
 
 // --- Sky: stylized SoT gradient + procedural clouds dome (shares skyColor with water) ---
 const skyAdapter = {
-  topColor: new THREE.Color(0x2f7ed6),     // rich blue zenith (also water reflection)
-  bottomColor: new THREE.Color(0x9ec9ec),  // lighter blue horizon
+  topColor: new THREE.Color(0x4496e0),     // rich blue zenith (also water reflection)
+  bottomColor: new THREE.Color(0xb0e0f4),  // bright cyan-blue horizon (matches SoT sky)
   sunDirection: sun,
   sunColor: new THREE.Color(0xfff2dd),
 };

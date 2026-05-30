@@ -175,25 +175,21 @@ export function createOceanMaterial(sky) {
         float k2 = uScatterStrength * pow(dotc(viewDir, normal), 2.0);
         float k3 = uScatterShadowStrength * NdotL;
         float k4 = uBubbleDensity;
-        vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
-        scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
-        // Height color gradient: dark navy trough -> turquoise crest (sharpened for contrast).
-        float heightT = smoothstep(0.0, 1.0, clamp(vHeight * 0.26 + 0.42, 0.0, 1.0));
-        scatter += mix(uDeepColor, uScatterColor, heightT) * uSunIrradiance * 0.36;
+
+        // BODY COLOR driven by wave HEIGHT: deep blue ONLY in troughs, bright
+        // turquoise on crests/elevated water (dark never appears on peaks).
+        float ht = smoothstep(0.28, 0.8, clamp(vHeight * 0.5 + 0.5, 0.0, 1.0));
+        vec3 body = mix(uDeepColor, uScatterColor, ht);
+        // Subsurface glow concentrated at backlit peaks (kept low so troughs stay dark).
+        float sss = k1 + 0.3 * k2 + 0.3 * k3;
+        vec3 scatter = body * uSunIrradiance + sss * uScatterColor * uSunIrradiance * 0.35;
+        scatter += k4 * uBubbleColor * uSunIrradiance;
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;
 
         vec3 output_ = (1.0 - F) * scatter + specular + F * envReflection;
         output_ = max(vec3(0.0), output_);
-
-        // Large-scale randomized DEEP-BLUE patches (deeper-water regions), like SoT:
-        // patches shift HUE toward the dark deep-blue, not just dim the cyan.
-        float darkP = texture2D(uFoamTex, vFlatXZ * 0.0016 + 7.3).r;
-        darkP += 0.5 * texture2D(uFoamTex, vFlatXZ * 0.0041 + 2.1).g;
-        darkP = smoothstep(0.35, 0.95, darkP);
-        vec3 patchColor = uDeepColor * uSunIrradiance * 0.75;
-        output_ = mix(patchColor, output_, darkP);
 
         // Streaky foam: break the FFT crest-foam with stretched, flow-scrolled
         // noise so it reads as soft streaks (SoT) instead of speckle.

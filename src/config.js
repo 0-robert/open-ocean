@@ -43,8 +43,8 @@ export const config = {
   bloom: { strength: 0.14, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: { bias: 0.67, threshold: 0.0, add: 1.0, amount: 2.6, decay: 0.97, injectRate: 1.0, flow: 0.0006 },
   colors: {
-    deep: [0.0, 0.13, 0.34],         // DARK BLUE deep water / patches (SoT contrast)
-    scatter: [0.08, 0.58, 0.58],     // bright turquoise SSS glow (crests/shallows)
+    deep: [0.0, 0.20, 0.44],         // deep blue TROUGH color
+    scatter: [0.5, 0.78, 0.78],      // bright pale turquoise CREST color (sampled from SoT)
     bubble: [0.1, 0.4, 0.45],
     foam: [0.95, 0.99, 1.0],
     sunIrradiance: [1.1, 1.08, 1.0],
@@ -53,7 +53,7 @@ export const config = {
   },
   lighting: {
     roughness: 0.14, normalStrength: 0.85,
-    wavePeakScatterStrength: 2.0, scatterStrength: 0.9,
+    wavePeakScatterStrength: 2.0, scatterStrength: 0.4,
     scatterShadowStrength: 0.25, environmentLightStrength: 0.55, bubbleDensity: 0.4,
     heightModifier: 0.6,
   },

@@ -2,11 +2,11 @@ export const config = {
   sim: {
     N: 256,                 // FFT resolution per cascade (power of two)
     gravity: 9.81,
-    depth: 200,             // deep water so big swells aren't suppressed by the TMA correction
+    depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [1.1, 1.1],     // horizontal (choppy) displacement strength [x, z]
-    displacementScale: 2.2, // global wave-height multiplier (visibility)
+    lambda: [0.75, 0.75],   // horizontal (choppy) displacement strength [x, z]
+    displacementScale: 1.3, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
     // cutoffs) so they don't double-count: swell, waves, ripples. Non-harmonic
@@ -19,8 +19,8 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 22.0, windDirection: 22.0, fetch: 100000,
-    spreadBlend: 1.0, swell: 0.5, peakEnhancement: 3.3, shortWavesFade: 0.02,
+    scale: 1.0, windSpeed: 13.0, windDirection: 22.0, fetch: 100000,
+    spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon

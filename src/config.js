@@ -6,7 +6,7 @@ export const config = {
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
     lambda: [0.75, 0.75],   // horizontal (choppy) displacement strength [x, z]
-    displacementScale: 1.3, // global wave-height multiplier (visibility)
+    displacementScale: 3.0, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
     // cutoffs) so they don't double-count: swell, waves, ripples. Non-harmonic
@@ -19,7 +19,7 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 13.0, windDirection: 22.0, fetch: 100000,
+    scale: 1.0, windSpeed: 16.0, windDirection: 22.0, fetch: 100000,
     spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit

@@ -6,7 +6,7 @@ import { buildButterfly } from './butterfly.js';
 const FFT_FRAG = /* glsl */`
   precision highp float;
   ${complexGLSL}
-  uniform sampler2D uButterfly;   // (log2N x N): (twRe, twIm, idxA, idxB)
+  uniform sampler2D uButterfly;   // (N wide x log2N tall): (twRe, twIm, idxA, idxB)
   uniform sampler2D uSource;
   uniform float uN;
   uniform float uStage;
@@ -16,7 +16,7 @@ const FFT_FRAG = /* glsl */`
   void main() {
     vec2 px = gl_FragCoord.xy - 0.5;             // integer pixel coords
     float idx = uHorizontal ? px.x : px.y;
-    vec4 bf = texelFetch(uButterfly, ivec2(int(uStage), int(idx)), 0);
+    vec4 bf = texelFetch(uButterfly, ivec2(int(idx), int(uStage)), 0);
     vec2 tw = bf.xy;
     int a = int(bf.z);
     int b = int(bf.w);
@@ -39,7 +39,9 @@ export class FFT {
     this.N = N;
     this.stages = Math.log2(N);
     const bf = buildButterfly(N);
-    this.butterfly = new THREE.DataTexture(bf.data, bf.width, bf.height, THREE.RGBAFormat, THREE.FloatType);
+    // Data is packed (stage*N + idx): a texture N wide x stages tall, fetched at
+    // texel (idx, stage). (bf.width=stages, bf.height=N -> texture dims N, stages.)
+    this.butterfly = new THREE.DataTexture(bf.data, bf.height, bf.width, THREE.RGBAFormat, THREE.FloatType);
     this.butterfly.needsUpdate = true;
     this.uniforms = {
       uButterfly: { value: this.butterfly },

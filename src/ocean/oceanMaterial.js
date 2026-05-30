@@ -41,6 +41,9 @@ export function createOceanMaterial(sky) {
     uFoamTex: { value: null },
     uFoamAmount: { value: config.foam.amount },
     uTime: { value: 0 },
+    uBoatPos: { value: new THREE.Vector2(1e9, 1e9) }, // far away => no mask until set
+    uBoatDir: { value: new THREE.Vector2(0, 1) },
+    uBoatHalf: { value: new THREE.Vector2(0, 0) },
     uWindDir: { value: new THREE.Vector2(
       Math.cos((config.spectrum.windDirection / 180) * Math.PI),
       Math.sin((config.spectrum.windDirection / 180) * Math.PI),
@@ -102,6 +105,7 @@ export function createOceanMaterial(sky) {
       uniform float uFogNear, uFogFar, uDetailFadeStart, uDetailFadeEnd, uTime, uFoamAmount;
       uniform sampler2D uFoamTex;
       uniform vec2 uWindDir;
+      uniform vec2 uBoatPos, uBoatDir, uBoatHalf;
       varying vec3 vWorldPos;
       varying vec2 vFlatXZ;
       varying float vFoam;
@@ -123,6 +127,15 @@ export function createOceanMaterial(sky) {
       }
 
       void main() {
+        // Water mask: discard water inside the boat's hull footprint (ellipse in
+        // boat-space) so the open deck doesn't flood.
+        vec2 rel = vWorldPos.xz - uBoatPos;
+        vec2 fwd = uBoatDir;
+        vec2 rgt = vec2(fwd.y, -fwd.x);
+        float along = dot(rel, fwd) / max(uBoatHalf.x, 0.001);
+        float across = dot(rel, rgt) / max(uBoatHalf.y, 0.001);
+        if (along * along + across * across < 1.0) discard;
+
         vec2 slope = vec2(0.0);
         ${sumSlope}
         float fftDist = length(cameraPosition - vWorldPos);

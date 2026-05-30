@@ -160,6 +160,13 @@ renderer.setAnimationLoop((now) => {
 
   sampler.refresh();
   boat.update(sampler, dt, controls.keys);
+
+  // Feed the boat footprint to the water mask (carves the hull out of the water).
+  if (boat.loaded) {
+    oceanMat.uniforms.uBoatPos.value.set(boat.worldX, boat.worldZ);
+    oceanMat.uniforms.uBoatDir.value.set(Math.sin(boat.yaw), Math.cos(boat.yaw));
+    oceanMat.uniforms.uBoatHalf.value.set(boat.halfLength * 0.92, boat.halfWidth * 0.92);
+  }
   
   const cameraSurfaceY = sampler.getHeightAndNormal(boat.worldX, boat.worldZ).height;
   controls.focal.set(boat.worldX, 0, boat.worldZ);

@@ -10,7 +10,7 @@ export class Boat {
     this.mesh = null;
     this.sizecoefficient = .5
     this.loaded = false;
-    this.draft = 1.5*this.sizecoefficient; // sits higher -> less water washing into the open hull
+    this.draft = 2.6*this.sizecoefficient; // sits deeper in the water -> weighty, not floaty
 
     // Physics state
     this.y = 0;

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { LinearFilter } from 'three';
 import { complexGLSL } from '../glsl/complex.glsl.js';
 import { FullscreenPass, makeFloatTarget } from '../core/fullscreenPass.js';
 import { SpectrumPass } from './spectrumPass.js';
@@ -108,8 +109,8 @@ export class OceanSim {
 
     this.dispSpectrum = makeFloatTarget(N);
     this.slopeSpectrum = makeFloatTarget(N);
-    this.displacement = makeFloatTarget(N); // xyz + foam
-    this.slope = makeFloatTarget(N);        // normal slopes
+    this.displacement = makeFloatTarget(N, 1, LinearFilter); // xyz + foam, smoothly sampled
+    this.slope = makeFloatTarget(N, 1, LinearFilter);        // normal slopes, smoothly sampled
 
     this.evolveUniforms = {
       uH0: { value: this.h0.texture },

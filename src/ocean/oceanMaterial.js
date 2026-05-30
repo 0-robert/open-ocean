@@ -25,6 +25,8 @@ export function createOceanMaterial(sky) {
       uScatterColor: { value: new THREE.Color(...config.colors.scatter) },
       uBubbleColor: { value: new THREE.Color(...config.colors.bubble) },
       uFoamColor: { value: new THREE.Color(...config.colors.foam) },
+      uDeepColor: { value: new THREE.Color(...config.colors.deep) },
+      uNormalStrength: { value: config.lighting.normalStrength },
 
       uRoughness: { value: config.lighting.roughness },
       uWavePeakScatterStrength: { value: config.lighting.wavePeakScatterStrength },
@@ -61,7 +63,8 @@ export function createOceanMaterial(sky) {
       #define PI 3.141592653589793
       ${skyGLSL}
       uniform sampler2D uSlope;
-      uniform vec3 uSunIrradiance, uScatterColor, uBubbleColor, uFoamColor;
+      uniform vec3 uSunIrradiance, uScatterColor, uBubbleColor, uFoamColor, uDeepColor;
+      uniform float uNormalStrength;
       uniform float uRoughness, uWavePeakScatterStrength, uScatterStrength;
       uniform float uScatterShadowStrength, uEnvironmentLightStrength, uBubbleDensity, uHeightModifier;
       uniform vec3 uFogColor;
@@ -87,21 +90,26 @@ export function createOceanMaterial(sky) {
       }
 
       void main() {
-        vec2 slope = texture2D(uSlope, vUv).xy;
+        vec2 slope = texture2D(uSlope, vUv).xy * uNormalStrength;
         vec3 normal = normalize(vec3(-slope.x, 1.0, -slope.y));
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         vec3 lightDir = normalize(uSunDirection);
         vec3 halfwayDir = normalize(lightDir + viewDir);
-        float a = max(0.02, uRoughness);
+        float foam = clamp(vFoam, 0.0, 1.0);
+        float a = max(0.02, uRoughness + foam * 0.3);
 
-        float F = 0.02 + 0.98 * pow(1.0 - dotc(normal, viewDir), 5.0);
+        // Roughness-aware fresnel (ported from FFTWater.shader).
+        float eta = 1.33;
+        float R0 = ((eta - 1.0) * (eta - 1.0)) / ((eta + 1.0) * (eta + 1.0));
+        float fnum = pow(1.0 - dotc(normal, viewDir), 5.0 * exp(-2.69 * a));
+        float F = clamp(R0 + (1.0 - R0) * fnum / (1.0 + 22.7 * pow(a, 1.5)), 0.0, 1.0);
 
-        float ndoth = max(0.0001, dotc(normal, halfwayDir));
+        float ndoth = max(0.0001, dot(normal, halfwayDir));
         float viewMask = smithMaskingBeckmann(halfwayDir, viewDir, a);
         float lightMask = smithMaskingBeckmann(halfwayDir, lightDir, a);
         float G = 1.0 / (1.0 + viewMask + lightMask);
         vec3 specular = uSunIrradiance * F * G * beckmann(ndoth, a);
-        specular /= 4.0 * max(0.001, dotc(normal, lightDir));
+        specular /= 4.0 * max(0.001, dotc(vec3(0.0, 1.0, 0.0), lightDir));
         specular *= dotc(normal, lightDir);
 
         float NdotL = dotc(normal, lightDir);
@@ -113,12 +121,14 @@ export function createOceanMaterial(sky) {
         float k4 = uBubbleDensity;
         vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
         scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
+        scatter += uDeepColor * uSunIrradiance * 0.12; // ambient floor so troughs read teal, not black
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;
 
         vec3 output_ = (1.0 - F) * scatter + specular + F * envReflection;
-        output_ = mix(output_, uFoamColor, clamp(vFoam, 0.0, 1.0));
+        output_ = max(vec3(0.0), output_);
+        output_ = mix(output_, uFoamColor, foam);
 
         float fog = smoothstep(uFogNear, uFogFar, length(cameraPosition - vWorldPos));
         gl_FragColor = vec4(mix(output_, uFogColor, fog), 1.0);

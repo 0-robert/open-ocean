@@ -33,6 +33,9 @@ scene.add(ocean.mesh);
 const sampler = new OceanSampler(renderer, sim);
 const buoy = new Buoy(scene);
 
+// Exposed for live tuning + headless verification.
+window.__ocean = { THREE, scene, camera, controls, sim, oceanMat, config, sky };
+
 let prev = performance.now();
 let t = 0;
 renderer.setAnimationLoop((now) => {

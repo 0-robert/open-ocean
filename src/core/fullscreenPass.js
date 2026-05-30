@@ -24,13 +24,18 @@ export class FullscreenPass {
   }
 }
 
-/** Half-float RGBA render target sized N x N (nearest filtering, repeat wrap). */
-export function makeFloatTarget(N, count = 1) {
+/**
+ * Half-float RGBA render target sized N x N, repeat-wrapped.
+ * FFT ping-pong targets use NearestFilter (they read via exact texelFetch);
+ * the final sampled maps (displacement/slope) use LinearFilter so the surface
+ * interpolates smoothly instead of showing per-texel facets.
+ */
+export function makeFloatTarget(N, count = 1, filter = THREE.NearestFilter) {
   return new THREE.WebGLRenderTarget(N, N, {
     type: THREE.HalfFloatType,
     format: THREE.RGBAFormat,
-    minFilter: THREE.NearestFilter,
-    magFilter: THREE.NearestFilter,
+    minFilter: filter,
+    magFilter: filter,
     wrapS: THREE.RepeatWrapping,
     wrapT: THREE.RepeatWrapping,
     depthBuffer: false,

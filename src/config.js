@@ -26,13 +26,16 @@ export const config = {
   boat: {
     // driving
     accel: 12, maxSpeed: 16, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
-    // buoyancy heave: stiff enough to track waves (sink into troughs, climb
-    // crests) but damped for weight (not a bouncy cork)
-    heaveStiffness: 5.5, heaveDamping: 3.0,
-    // pitch/roll: damped spring toward the local wave slope
-    rotStiffness: 9.0, rotDamping: 4.5,
+    // RIGID-BODY BUOYANCY: real gravity + Archimedes force (~submerged depth) at
+    // each hull point; the same forces produce pitch/roll torque (self-righting).
+    gravity: 9.81,
+    mass: 1.0,
+    buoyancy: 2.2,      // upward force per unit submerged depth per hull point
+    heaveDrag: 1.3,     // vertical water resistance (damps the bob)
+    inertia: 35.0,      // rotational inertia (higher = slower to rock)
+    rotDrag: 2.8,       // angular water resistance
     rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it
-    sampleScale: 0.9,   // hull-extent fraction used for slope sampling
+    sampleScale: 0.9,   // hull-extent fraction used for buoyancy sampling
   },
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   bloom: { strength: 0.14, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only

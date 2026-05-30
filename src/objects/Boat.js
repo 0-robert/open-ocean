@@ -10,7 +10,7 @@ export class Boat {
     this.mesh = null;
     this.sizecoefficient = .5
     this.loaded = false;
-    this.draft = 3.0*this.sizecoefficient; // world units of hull kept under the waterline (seats the boat)
+    this.draft = 2.0*this.sizecoefficient; // visual seating offset (hull bottom below boat origin)
 
     // Physics state
     this.y = 0;
@@ -124,24 +124,43 @@ export class Boat {
     const sStbd = sample(-hw, 0);
     const sCenter = sampler.getHeightAndNormal(this.worldX, this.worldZ);
 
-    // 3. Heave follows the water DIRECTLY UNDER the hull center, so the boat drops
-    //    into troughs and climbs crests (reacts to tall waves) instead of floating
-    //    at a smoothed multi-point average. Edge samples are used only for tilt.
-    const heaveTarget = sCenter.height;
-    const accelY = B.heaveStiffness * (heaveTarget - this.y) - B.heaveDamping * this.vy;
-    this.vy += accelY * dt;
+    // 3 & 4. Rigid-body buoyancy: gravity pulls down at all times; each hull point
+    // that is underwater pushes up with a force ~ its submerged depth (Archimedes).
+    // Summed -> heave; the same forces at their offsets -> pitch/roll torque.
+    const g = B.gravity;
+    const pts = [
+      [0, hl, sBow.height],
+      [0, -hl, sStern.height],
+      [hw, 0, sPort.height],
+      [-hw, 0, sStbd.height],
+      [0, 0, sCenter.height],
+    ];
+    let fy = -B.mass * g; // gravity (constant downward)
+    let torquePitch = 0;  // about boat X axis
+    let torqueRoll = 0;   // about boat Z axis
+    for (let k = 0; k < pts.length; k++) {
+      const px = pts[k][0], pz = pts[k][1], waterH = pts[k][2];
+      // world height of this hull point given current heave + small-angle tilt
+      const pointY = this.y - this.rotPos.x * pz + this.rotPos.y * px;
+      const sub = Math.max(0, waterH - pointY); // submerged depth (0 if in air)
+      const fb = B.buoyancy * sub;               // buoyant force, up
+      fy += fb;
+      torquePitch += -pz * fb;
+      torqueRoll += px * fb;
+    }
+
+    // Heave: real gravity -> falls at g when airborne; buoyancy balances weight.
+    const ay = fy / B.mass - B.heaveDrag * this.vy;
+    this.vy += ay * dt;
     this.y += this.vy * dt;
 
-    // 4. Pitch/roll: damped spring toward the local wave slope across the hull.
-    let targetPitch = Math.atan2(sStern.height - sBow.height, 2.0 * hl);
-    let targetRoll = Math.atan2(sStbd.height - sPort.height, 2.0 * hw);
-    targetPitch = Math.max(-B.rotMax, Math.min(B.rotMax, targetPitch));
-    targetRoll = Math.max(-B.rotMax, Math.min(B.rotMax, targetRoll));
-
-    this.rotVel.x += (B.rotStiffness * (targetPitch - this.rotPos.x) - B.rotDamping * this.rotVel.x) * dt;
-    this.rotVel.y += (B.rotStiffness * (targetRoll - this.rotPos.y) - B.rotDamping * this.rotVel.y) * dt;
-    this.rotPos.x += this.rotVel.x * dt;
-    this.rotPos.y += this.rotVel.y * dt;
+    // Pitch/roll from buoyancy torque (deeper side gets lifted -> self-rights).
+    const aPitch = torquePitch / B.inertia - B.rotDrag * this.rotVel.x;
+    const aRoll = torqueRoll / B.inertia - B.rotDrag * this.rotVel.y;
+    this.rotVel.x += aPitch * dt;
+    this.rotVel.y += aRoll * dt;
+    this.rotPos.x = Math.max(-B.rotMax, Math.min(B.rotMax, this.rotPos.x + this.rotVel.x * dt));
+    this.rotPos.y = Math.max(-B.rotMax, Math.min(B.rotMax, this.rotPos.y + this.rotVel.y * dt));
 
     // 5. Apply Transforms
     this.group.position.set(this.worldX, this.y, this.worldZ);

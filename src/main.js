@@ -69,7 +69,8 @@ scene.environment = pmrem.fromScene(envScene).texture;
 envScene.remove(skyDome.mesh);
 scene.add(skyDome.mesh);
 
-const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.5);
+scene.add(new THREE.AmbientLight(0xbfe0f5, 0.7)); // guarantees the boat is never black
+const keyLight = new THREE.DirectionalLight(0xfff2dd, 2.6);
 keyLight.position.copy(sun).multiplyScalar(100);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);

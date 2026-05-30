@@ -187,6 +187,12 @@ export function createOceanMaterial(sky) {
         vec3 output_ = (1.0 - F) * scatter + specular + F * envReflection;
         output_ = max(vec3(0.0), output_);
 
+        // Large-scale randomized dark patches (deeper-water regions), like SoT.
+        float darkP = texture2D(uFoamTex, vFlatXZ * 0.0016 + 7.3).r;
+        darkP += 0.5 * texture2D(uFoamTex, vFlatXZ * 0.0041 + 2.1).g;
+        darkP = smoothstep(0.35, 0.95, darkP);
+        output_ *= mix(0.5, 1.05, darkP);
+
         // Streaky foam: break the FFT crest-foam with stretched, flow-scrolled
         // noise so it reads as soft streaks (SoT) instead of speckle.
         vec2 fdir = normalize(uWindDir);

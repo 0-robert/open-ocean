@@ -41,9 +41,10 @@ export function createOceanMaterial(sky) {
     uFoamTex: { value: null },
     uFoamAmount: { value: config.foam.amount },
     uTime: { value: 0 },
-    uBoatPos: { value: new THREE.Vector2(1e9, 1e9) }, // far away => no mask until set
+    uBoatPos: { value: new THREE.Vector2(1e9, 1e9) }, // far away => no dip until set
     uBoatDir: { value: new THREE.Vector2(0, 1) },
     uBoatHalf: { value: new THREE.Vector2(0, 0) },
+    uBoatDip: { value: 4.0 }, // how deep the hull presses the water down
     uWindDir: { value: new THREE.Vector2(
       Math.cos((config.spectrum.windDirection / 180) * Math.PI),
       Math.sin((config.spectrum.windDirection / 180) * Math.PI),
@@ -74,6 +75,8 @@ export function createOceanMaterial(sky) {
     vertexShader: /* glsl */`
       ${Array.from({ length: nc }, (_, i) => `uniform sampler2D uDisp${i}; uniform float uLengthScale${i};`).join('\n')}
       uniform float uDisplacementScale;
+      uniform vec2 uBoatPos, uBoatDir, uBoatHalf;
+      uniform float uBoatDip;
       varying vec3 vWorldPos;
       varying vec2 vFlatXZ;
       varying float vFoam;
@@ -86,6 +89,16 @@ export function createOceanMaterial(sky) {
         ${sumDisp}
         disp *= uDisplacementScale;
         vec3 wp = flatPos + disp;
+
+        // Boat hull presses the water down into a smooth bowl (no flooding, no hole).
+        vec2 brel = wp.xz - uBoatPos;
+        vec2 bf = uBoatDir;
+        vec2 br = vec2(bf.y, -bf.x);
+        float ba = dot(brel, bf) / max(uBoatHalf.x, 0.001);
+        float bc = dot(brel, br) / max(uBoatHalf.y, 0.001);
+        float bowl = 1.0 - smoothstep(0.55, 1.15, ba * ba + bc * bc);
+        wp.y -= bowl * uBoatDip;
+
         vFoam = foam;
         vHeight = disp.y;
         vWorldPos = wp;
@@ -127,15 +140,6 @@ export function createOceanMaterial(sky) {
       }
 
       void main() {
-        // Water mask: discard water inside the boat's hull footprint (ellipse in
-        // boat-space) so the open deck doesn't flood.
-        vec2 rel = vWorldPos.xz - uBoatPos;
-        vec2 fwd = uBoatDir;
-        vec2 rgt = vec2(fwd.y, -fwd.x);
-        float along = dot(rel, fwd) / max(uBoatHalf.x, 0.001);
-        float across = dot(rel, rgt) / max(uBoatHalf.y, 0.001);
-        if (along * along + across * across < 1.0) discard;
-
         vec2 slope = vec2(0.0);
         ${sumSlope}
         float fftDist = length(cameraPosition - vWorldPos);

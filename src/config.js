@@ -5,8 +5,8 @@ export const config = {
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [0.5, 0.6],     // horizontal (choppy) displacement strength [x, z]
-    displacementScale: 0.9, // global wave-height multiplier (visibility)
+    lambda: [0.8, 0.8],     // horizontal (choppy) displacement strength [x, z]
+    displacementScale: 1.1, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
     // cutoffs) so they don't double-count: swell, waves, ripples. Non-harmonic
@@ -19,12 +19,12 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 10.0, windDirection: 22.0, fetch: 100000,
+    scale: 1.0, windSpeed: 13.0, windDirection: 22.0, fetch: 100000,
     spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
-  foam: { bias: -0.4, threshold: 0.0, add: 0.9 },
+  foam: { bias: 0.0, threshold: 0.0, add: 1.0, amount: 2.2 },
   colors: {
     deep: [0.02, 0.22, 0.30],        // body color of the water (deep teal)
     scatter: [0.06, 0.55, 0.52],     // turquoise SSS glow through crests

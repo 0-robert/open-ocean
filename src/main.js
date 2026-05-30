@@ -35,7 +35,7 @@ const water = new Water(new THREE.PlaneGeometry(800, 800, 1536, 1536), {
   waterNormals,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
-  waterColor: 0x0a3a4a,
+  waterColor: 0x0e5a6b,
   distortionScale: 3.7,
   fog: false,
 });

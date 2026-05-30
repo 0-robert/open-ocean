@@ -26,18 +26,18 @@ export const config = {
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   foam: { bias: 0.45, threshold: 0.0, add: 1.0, amount: 2.5 },
   colors: {
-    deep: [0.02, 0.22, 0.30],        // body color of the water (deep teal)
-    scatter: [0.06, 0.55, 0.52],     // turquoise SSS glow through crests
-    bubble: [0.18, 0.55, 0.55],
+    deep: [0.0, 0.09, 0.16],         // dark navy trough
+    scatter: [0.0, 0.32, 0.40],      // ocean teal SSS glow (not neon)
+    bubble: [0.0, 0.12, 0.18],
     foam: [0.92, 0.97, 1.0],
-    sunIrradiance: [1.3, 1.25, 1.15],
+    sunIrradiance: [1.0, 0.98, 0.92],
     sunDirection: [0.35, 0.45, 0.30], // will be normalized (lower sun = more grazing scatter)
     fog: [0.66, 0.76, 0.88],
   },
   lighting: {
     roughness: 0.10, normalStrength: 1.0,
-    wavePeakScatterStrength: 2.2, scatterStrength: 1.2,
-    scatterShadowStrength: 0.25, environmentLightStrength: 0.9, bubbleDensity: 0.7,
+    wavePeakScatterStrength: 1.6, scatterStrength: 0.6,
+    scatterShadowStrength: 0.2, environmentLightStrength: 1.0, bubbleDensity: 0.2,
     heightModifier: 0.6,
   },
 };

@@ -141,9 +141,9 @@ export function createOceanMaterial(sky) {
         float k4 = uBubbleDensity;
         vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
         scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
-        // Height color gradient: dark navy trough -> bright turquoise crest.
-        float heightT = clamp(vHeight * 0.18 + 0.5, 0.0, 1.0);
-        scatter += mix(uDeepColor, uScatterColor * 1.4, heightT) * uSunIrradiance * 0.2;
+        // Height color gradient: dark navy trough -> turquoise crest (sharpened for contrast).
+        float heightT = smoothstep(0.0, 1.0, clamp(vHeight * 0.22 + 0.45, 0.0, 1.0));
+        scatter += mix(uDeepColor, uScatterColor, heightT) * uSunIrradiance * 0.14;
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;

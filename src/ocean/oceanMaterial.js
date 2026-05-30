@@ -178,8 +178,8 @@ export function createOceanMaterial(sky) {
         vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
         scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
         // Height color gradient: dark navy trough -> turquoise crest (sharpened for contrast).
-        float heightT = smoothstep(0.0, 1.0, clamp(vHeight * 0.22 + 0.45, 0.0, 1.0));
-        scatter += mix(uDeepColor, uScatterColor, heightT) * uSunIrradiance * 0.42;
+        float heightT = smoothstep(0.0, 1.0, clamp(vHeight * 0.26 + 0.42, 0.0, 1.0));
+        scatter += mix(uDeepColor, uScatterColor, heightT) * uSunIrradiance * 0.36;
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;
@@ -187,11 +187,13 @@ export function createOceanMaterial(sky) {
         vec3 output_ = (1.0 - F) * scatter + specular + F * envReflection;
         output_ = max(vec3(0.0), output_);
 
-        // Large-scale randomized dark patches (deeper-water regions), like SoT.
+        // Large-scale randomized DEEP-BLUE patches (deeper-water regions), like SoT:
+        // patches shift HUE toward the dark deep-blue, not just dim the cyan.
         float darkP = texture2D(uFoamTex, vFlatXZ * 0.0016 + 7.3).r;
         darkP += 0.5 * texture2D(uFoamTex, vFlatXZ * 0.0041 + 2.1).g;
         darkP = smoothstep(0.35, 0.95, darkP);
-        output_ *= mix(0.5, 1.05, darkP);
+        vec3 patchColor = uDeepColor * uSunIrradiance * 0.75;
+        output_ = mix(patchColor, output_, darkP);
 
         // Streaky foam: break the FFT crest-foam with stretched, flow-scrolled
         // noise so it reads as soft streaks (SoT) instead of speckle.

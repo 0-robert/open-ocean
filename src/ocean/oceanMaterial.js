@@ -44,7 +44,7 @@ export function createOceanMaterial(sky) {
     uBoatPos: { value: new THREE.Vector2(1e9, 1e9) }, // far away => no dip until set
     uBoatDir: { value: new THREE.Vector2(0, 1) },
     uBoatHalf: { value: new THREE.Vector2(0, 0) },
-    uBoatDip: { value: 1.0 }, // how deep the hull presses the water down (small = no flying gap)
+    uBoatDip: { value: 0.6 }, // how deep the hull presses the water down (small = no flying gap)
     uWindDir: { value: new THREE.Vector2(
       Math.cos((config.spectrum.windDirection / 180) * Math.PI),
       Math.sin((config.spectrum.windDirection / 180) * Math.PI),

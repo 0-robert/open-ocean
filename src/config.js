@@ -26,9 +26,9 @@ export const config = {
   boat: {
     // driving
     accel: 12, maxSpeed: 16, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
-    // buoyancy heave: soft + heavier-damped -> slow weighty bob, lags waves so
-    // crests wash over the bow instead of the hull popping on top like a cork
-    heaveStiffness: 2.5, heaveDamping: 2.4,
+    // buoyancy heave: stiff enough to track waves (sink into troughs, climb
+    // crests) but damped for weight (not a bouncy cork)
+    heaveStiffness: 5.5, heaveDamping: 3.0,
     // pitch/roll: damped spring toward the local wave slope
     rotStiffness: 9.0, rotDamping: 4.5,
     rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it

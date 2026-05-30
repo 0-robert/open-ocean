@@ -10,7 +10,7 @@ export class Boat {
     this.mesh = null;
     this.sizecoefficient = .5
     this.loaded = false;
-    this.draft = 2.6*this.sizecoefficient; // sits deeper in the water -> weighty, not floaty
+    this.draft = 3.0*this.sizecoefficient; // world units of hull kept under the waterline (seats the boat)
 
     // Physics state
     this.y = 0;
@@ -123,11 +123,12 @@ export class Boat {
     const sPort = sample(hw, 0);
     const sStbd = sample(-hw, 0);
     const sCenter = sampler.getHeightAndNormal(this.worldX, this.worldZ);
-    const waterY = (sBow.height + sStern.height + sPort.height + sStbd.height + sCenter.height) / 5.0;
 
-    // 3. Heave: critically-ish damped spring toward the water surface.
-    //    Lag behind the moving surface gives the natural bob; damping settles it.
-    const accelY = B.heaveStiffness * (waterY - this.y) - B.heaveDamping * this.vy;
+    // 3. Heave follows the water DIRECTLY UNDER the hull center, so the boat drops
+    //    into troughs and climbs crests (reacts to tall waves) instead of floating
+    //    at a smoothed multi-point average. Edge samples are used only for tilt.
+    const heaveTarget = sCenter.height;
+    const accelY = B.heaveStiffness * (heaveTarget - this.y) - B.heaveDamping * this.vy;
     this.vy += accelY * dt;
     this.y += this.vy * dt;
 

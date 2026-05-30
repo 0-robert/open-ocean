@@ -23,6 +23,16 @@ export const config = {
     spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
+  boat: {
+    // driving
+    accel: 16, maxSpeed: 32, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
+    // buoyancy heave: damped spring toward the water surface (under-damped = gentle bob)
+    heaveStiffness: 7.0, heaveDamping: 3.2,
+    // pitch/roll: damped spring toward the local wave slope
+    rotStiffness: 9.0, rotDamping: 4.5,
+    rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it
+    sampleScale: 0.9,   // hull-extent fraction used for slope sampling
+  },
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   bloom: { strength: 0.14, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: { bias: 0.67, threshold: 0.0, add: 1.0, amount: 2.6, decay: 0.97, injectRate: 1.0, flow: 0.0006 },

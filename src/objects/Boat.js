@@ -138,19 +138,23 @@ export class Boat {
     let fy = -B.mass * g; // gravity (constant downward)
     let torquePitch = 0;  // about boat X axis
     let torqueRoll = 0;   // about boat Z axis
+    let wet = 0;          // how many hull points are underwater
     for (let k = 0; k < pts.length; k++) {
       const px = pts[k][0], pz = pts[k][1], waterH = pts[k][2];
       // world height of this hull point given current heave + small-angle tilt
       const pointY = this.y - this.rotPos.x * pz + this.rotPos.y * px;
       const sub = Math.max(0, waterH - pointY); // submerged depth (0 if in air)
+      if (sub > 0) wet += 1;
       const fb = B.buoyancy * sub;               // buoyant force, up
       fy += fb;
       torquePitch += -pz * fb;
       torqueRoll += px * fb;
     }
+    const wetFrac = wet / pts.length;
 
-    // Heave: real gravity -> falls at g when airborne; buoyancy balances weight.
-    const ay = fy / B.mass - B.heaveDrag * this.vy;
+    // Heave: real gravity always; water drag ONLY when submerged. In air the boat
+    // falls at g (no feather); underwater the drag damps the bob.
+    const ay = fy / B.mass - B.heaveDrag * wetFrac * this.vy;
     this.vy += ay * dt;
     this.y += this.vy * dt;
 

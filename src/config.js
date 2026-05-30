@@ -33,7 +33,7 @@ export const config = {
     gravity: 26.3,
     mass: 1.0,
     buoyancy: 5.9,      // upward force per unit submerged depth per hull point
-    heaveDrag: 1.6,     // vertical water resistance (damps the bob)
+    heaveDrag: 4.5,     // vertical water resistance (damps the bob)
     inertia: 35.0,      // rotational inertia (higher = slower to rock)
     rotDrag: 2.8,       // angular water resistance
     rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it

@@ -25,9 +25,9 @@ export const config = {
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   boat: {
     // driving
-    accel: 16, maxSpeed: 32, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
-    // buoyancy heave: damped spring toward the water surface (under-damped = gentle bob)
-    heaveStiffness: 7.0, heaveDamping: 3.2,
+    accel: 12, maxSpeed: 16, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
+    // buoyancy heave: under-damped spring -> lags waves (not glued) + lively bob
+    heaveStiffness: 4.0, heaveDamping: 1.8,
     // pitch/roll: damped spring toward the local wave slope
     rotStiffness: 9.0, rotDamping: 4.5,
     rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it

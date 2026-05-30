@@ -10,7 +10,7 @@ export class Boat {
     this.mesh = null;
     this.sizecoefficient = .5
     this.loaded = false;
-    this.draft = 2.5*this.sizecoefficient; // Sinks deeper
+    this.draft = 1.5*this.sizecoefficient; // sits higher -> less water washing into the open hull
 
     // Physics state
     this.y = 0;

@@ -35,6 +35,8 @@ export function createOceanMaterial(sky) {
     uFogColor: { value: new THREE.Color(...config.colors.fog) },
     uFogNear: { value: config.fog.near },
     uFogFar: { value: config.fog.far },
+    uDetailFadeStart: { value: config.fog.near * 0.4 },
+    uDetailFadeEnd: { value: config.fog.far },
   };
   for (let i = 0; i < nc; i++) {
     uniforms[`uDisp${i}`] = { value: null };
@@ -82,7 +84,7 @@ export function createOceanMaterial(sky) {
       uniform float uRoughness, uWavePeakScatterStrength, uScatterStrength;
       uniform float uScatterShadowStrength, uEnvironmentLightStrength, uBubbleDensity, uHeightModifier;
       uniform vec3 uFogColor;
-      uniform float uFogNear, uFogFar;
+      uniform float uFogNear, uFogFar, uDetailFadeStart, uDetailFadeEnd;
       varying vec3 vWorldPos;
       varying vec2 vFlatXZ;
       varying float vFoam;
@@ -106,7 +108,9 @@ export function createOceanMaterial(sky) {
       void main() {
         vec2 slope = vec2(0.0);
         ${sumSlope}
-        slope *= uNormalStrength;
+        float fftDist = length(cameraPosition - vWorldPos);
+        float detailFade = clamp(1.0 - (fftDist - uDetailFadeStart) / (uDetailFadeEnd - uDetailFadeStart), 0.0, 1.0);
+        slope *= uNormalStrength * detailFade;
         vec3 normal = normalize(vec3(-slope.x, 1.0, -slope.y));
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         vec3 lightDir = normalize(uSunDirection);
@@ -137,7 +141,9 @@ export function createOceanMaterial(sky) {
         float k4 = uBubbleDensity;
         vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
         scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
-        scatter += uDeepColor * uSunIrradiance * 0.12; // ambient floor so troughs read teal, not black
+        // Height color gradient: dark navy trough -> bright turquoise crest.
+        float heightT = clamp(vHeight * 0.18 + 0.5, 0.0, 1.0);
+        scatter += mix(uDeepColor, uScatterColor * 1.4, heightT) * uSunIrradiance * 0.2;
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;

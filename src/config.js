@@ -5,7 +5,7 @@ export const config = {
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [0.5, 0.5],     // horizontal (choppy) displacement strength [x, z]
+    lambda: [0.5, 0.6],     // horizontal (choppy) displacement strength [x, z]
     displacementScale: 0.9, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber

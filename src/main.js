@@ -29,7 +29,7 @@ const sampler = new OceanSampler(renderer, sim);
 const waterNormals = new THREE.TextureLoader().load('textures/waternormals.jpg', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
 });
-const water = new Water(new THREE.PlaneGeometry(5000, 5000, 1280, 1280), {
+const water = new Water(new THREE.PlaneGeometry(800, 800, 1536, 1536), {
   textureWidth: 512,
   textureHeight: 512,
   waterNormals,

@@ -6,12 +6,11 @@ import { OrbitFollowControls } from './camera/OrbitFollowControls.js';
 import { OceanSim } from './wave/OceanSim.js';
 import { OceanSampler } from './wave/OceanSampler.js';
 import { createOceanMaterial } from './ocean/oceanMaterial.js';
-import { Buoy } from './objects/Buoy.js';
 
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.5;
+renderer.toneMappingExposure = 0.72;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
@@ -65,8 +64,6 @@ const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.5);
 keyLight.position.copy(sun).multiplyScalar(100);
 scene.add(keyLight);
 
-const buoy = new Buoy(scene);
-
 let prev = performance.now();
 let t = 0;
 window.__ocean = { THREE, scene, camera, controls, water, oceanMat, sky, sim, config, setSun };
@@ -109,7 +106,7 @@ renderer.setAnimationLoop((now) => {
   water.position.z = controls.focal.z;
 
   sampler.refresh();
-  const surfaceY = buoy.update(controls.focal.x, controls.focal.z, sampler);
+  const surfaceY = sampler.getHeightAndNormal(controls.focal.x, controls.focal.z).height;
 
   controls.update(dt, surfaceY);
 

@@ -81,11 +81,7 @@ export class Boat {
           o.frustumCulled = false;
           o.castShadow = true;
           o.receiveShadow = true;
-          if (o.material) {
-            o.material.metalness = 0.0;      // wood/sail are not metal -> lit diffusely (no black)
-            o.material.roughness = Math.min(o.material.roughness ?? 0.8, 0.85);
-            o.material.envMapIntensity = 1.2;
-          }
+          if (o.material) o.material.roughness = Math.min(o.material.roughness, 0.7);
         }
       });
     }, undefined, (error) => {

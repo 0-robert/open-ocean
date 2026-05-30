@@ -175,15 +175,11 @@ export function createOceanMaterial(sky) {
         float k2 = uScatterStrength * pow(dotc(viewDir, normal), 2.0);
         float k3 = uScatterShadowStrength * NdotL;
         float k4 = uBubbleDensity;
-
-        // BODY COLOR driven by wave HEIGHT: deep blue ONLY in troughs, bright
-        // turquoise on crests/elevated water (dark never appears on peaks).
-        float ht = smoothstep(0.28, 0.8, clamp(vHeight * 0.5 + 0.5, 0.0, 1.0));
-        vec3 body = mix(uDeepColor, uScatterColor, ht);
-        // Subsurface glow concentrated at backlit peaks (kept low so troughs stay dark).
-        float sss = k1 + 0.3 * k2 + 0.3 * k3;
-        vec3 scatter = body * uSunIrradiance + sss * uScatterColor * uSunIrradiance * 0.35;
-        scatter += k4 * uBubbleColor * uSunIrradiance;
+        vec3 scatter = (k1 + k2) * uScatterColor * uSunIrradiance / (1.0 + lightMask);
+        scatter += k3 * uScatterColor * uSunIrradiance + k4 * uBubbleColor * uSunIrradiance;
+        // Height color gradient: dark navy trough -> turquoise crest (sharpened for contrast).
+        float heightT = smoothstep(0.0, 1.0, clamp(vHeight * 0.22 + 0.45, 0.0, 1.0));
+        scatter += mix(uDeepColor, uScatterColor, heightT) * uSunIrradiance * 0.42;
 
         vec3 reflectDir = reflect(-viewDir, normal);
         vec3 envReflection = skyColor(reflectDir) * uEnvironmentLightStrength;

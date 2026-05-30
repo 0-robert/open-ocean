@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSkyDome } from './env/SkyDome.js';
+import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -16,7 +16,7 @@ import { Boat } from './objects/Boat.js';
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.62;
+renderer.toneMappingExposure = 0.5;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
@@ -31,16 +31,26 @@ const sampler = new OceanSampler(renderer, sim);
 const boat = new Boat(scene);
 window.__boat = boat;
 
-// --- Sky: stylized SoT gradient + procedural clouds dome (shares skyColor with water) ---
+// --- Sky (three.js atmospheric scattering) for background + buoy env ---
+const sky = new Sky();
+sky.scale.setScalar(20000);
+scene.add(sky);
+const skyU = sky.material.uniforms;
+skyU['turbidity'].value = 0.8;
+skyU['rayleigh'].value = 2.4;
+skyU['mieCoefficient'].value = 0.005;
+skyU['mieDirectionalG'].value = 0.75;
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+
+// --- Custom SSS water material driven by the FFT sim ---
 const skyAdapter = {
-  topColor: new THREE.Color(0x4496e0),     // rich blue zenith (also water reflection)
-  bottomColor: new THREE.Color(0xb0e0f4),  // bright cyan-blue horizon (matches SoT sky)
+  topColor: new THREE.Color(0x2f7ed6),     // rich blue zenith for water reflection
+  bottomColor: new THREE.Color(0x9ec9ec),  // lighter blue horizon
   sunDirection: sun,
   sunColor: new THREE.Color(0xfff2dd),
 };
-const skyDome = createSkyDome(skyAdapter, { cloudAmount: 0.7 });
-scene.add(skyDome.mesh);
-scene.add(new THREE.HemisphereLight(0x9ec9ec, 0x0a3a4a, 0.6)); // soft sky ambient for the boat
 const oceanMat = createOceanMaterial(skyAdapter);
 const foamTex = new THREE.TextureLoader().load('textures/waternormals.jpg', (t) => {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -55,22 +65,15 @@ scene.add(water);
 function setSun(elevationDeg, azimuthDeg) {
   const phi = THREE.MathUtils.degToRad(90 - elevationDeg);
   const theta = THREE.MathUtils.degToRad(azimuthDeg);
-  sun.setFromSphericalCoords(1, phi, theta); // shared by sky dome + water + key light
+  sun.setFromSphericalCoords(1, phi, theta);
+  skyU['sunPosition'].value.copy(sun);
+  envScene.add(sky);
+  scene.environment = pmrem.fromScene(envScene).texture;
+  scene.add(sky);
 }
 setSun(32, 150);
 
-// Environment map (baked once from the sky dome) so lit objects like the boat
-// aren't black silhouettes.
-const pmrem = new THREE.PMREMGenerator(renderer);
-const envScene = new THREE.Scene();
-scene.remove(skyDome.mesh);
-envScene.add(skyDome.mesh);
-scene.environment = pmrem.fromScene(envScene).texture;
-envScene.remove(skyDome.mesh);
-scene.add(skyDome.mesh);
-
-scene.add(new THREE.AmbientLight(0xbfe0f5, 0.7)); // guarantees the boat is never black
-const keyLight = new THREE.DirectionalLight(0xfff2dd, 2.6);
+const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.5);
 keyLight.position.copy(sun).multiplyScalar(100);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
@@ -113,7 +116,7 @@ window.addEventListener('resize', () => {
 
 let prev = performance.now();
 let t = 0;
-window.__ocean = { THREE, scene, camera, controls, water, oceanMat, skyDome, sim, config, setSun, bloom };
+window.__ocean = { THREE, scene, camera, controls, water, oceanMat, sky, sim, config, setSun, bloom };
 
 // --- Debug: ?debug=disp|slope|height renders a raw FFT cascade-0 texture fullscreen ---
 const debugMode = new URLSearchParams(location.search).get('debug');
@@ -151,7 +154,6 @@ renderer.setAnimationLoop((now) => {
   const foam = sim.foamTextures;
   for (let i = 0; i < foam.length; i++) oceanMat.uniforms[`uFoam${i}`].value = foam[i];
   oceanMat.uniforms.uTime.value = t;
-  skyDome.uniforms.uTime.value = t;
 
   water.position.x = boat.worldX;
   water.position.z = boat.worldZ;
@@ -177,11 +179,11 @@ renderer.setAnimationLoop((now) => {
     return;
   }
   // Selective bloom: extract water-only highlights (sky hidden), then composite.
-  skyDome.mesh.visible = false;
+  sky.visible = false;
   const prevBg = scene.background;
   scene.background = null;
   // bloomComposer.render();
-  skyDome.mesh.visible = true;
+  sky.visible = true;
   scene.background = prevBg;
   finalComposer.render();
 });

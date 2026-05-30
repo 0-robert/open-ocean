@@ -25,7 +25,7 @@ export const config = {
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   boat: {
     // driving
-    accel: 12, maxSpeed: 16, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
+    accel: 7, maxSpeed: 9, linDrag: 0.5, turnAccel: 0.7, angDrag: 1.6,
     // RIGID-BODY BUOYANCY: real gravity + Archimedes force (~submerged depth) at
     // each hull point; the same forces produce pitch/roll torque (self-righting).
     // World is 2.68 units/metre (boat 7 m = 18.75 units), so gravity = 9.81*2.68

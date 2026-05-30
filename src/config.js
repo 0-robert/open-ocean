@@ -1,6 +1,6 @@
 export const config = {
   sim: {
-    N: 512,                 // FFT resolution per cascade (power of two)
+    N: 128,                 // FFT resolution per cascade (power of two)
     gravity: 9.81,
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
@@ -54,7 +54,7 @@ export const config = {
   lighting: {
     roughness: 0.14, normalStrength: 0.85,
     wavePeakScatterStrength: 2.0, scatterStrength: 0.9,
-    scatterShadowStrength: 0.25, environmentLightStrength: 0.45, bubbleDensity: 0.4,
+    scatterShadowStrength: 0.25, environmentLightStrength: 0.95, bubbleDensity: 0.4,
     heightModifier: 0.6,
   },
 };

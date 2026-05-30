@@ -12,6 +12,7 @@ import { skyGLSL } from '../glsl/sky.glsl.js';
  */
 export function createOceanMaterial(sky) {
   const nc = config.sim.cascades.length;
+  const foamCount = Math.max(1, nc - 1);
 
   const uniforms = {
     uNormalStrength: { value: config.lighting.normalStrength },
@@ -50,6 +51,7 @@ export function createOceanMaterial(sky) {
     uniforms[`uSlope${i}`] = { value: null };
     uniforms[`uLengthScale${i}`] = { value: config.sim.cascades[i].lengthScale };
   }
+  for (let i = 0; i < foamCount; i++) uniforms[`uFoam${i}`] = { value: null };
 
   // Generated per-cascade sampling.
   const sampler2Ds = Array.from({ length: nc }, (_, i) =>
@@ -60,6 +62,9 @@ export function createOceanMaterial(sky) {
     `{ vec4 d = texture2D(uDisp${i}, flatPos.xz / uLengthScale${i}); disp += d.xyz;${i < nc - 1 ? ' foam += d.a;' : ''} }`).join('\n');
   const sumSlope = Array.from({ length: nc }, (_, i) =>
     `slope += texture2D(uSlope${i}, vFlatXZ / uLengthScale${i}).xy;`).join('\n');
+  const foamDecls = Array.from({ length: foamCount }, (_, i) => `uniform sampler2D uFoam${i};`).join('\n');
+  const sumFoam = Array.from({ length: foamCount }, (_, i) =>
+    `accFoam += texture2D(uFoam${i}, vFlatXZ / uLengthScale${i}).r;`).join('\n');
 
   return new THREE.ShaderMaterial({
     uniforms,
@@ -88,6 +93,7 @@ export function createOceanMaterial(sky) {
       #define PI 3.141592653589793
       ${skyGLSL}
       ${sampler2Ds}
+      ${foamDecls}
       uniform vec3 uSunIrradiance, uScatterColor, uBubbleColor, uFoamColor, uDeepColor;
       uniform float uNormalStrength;
       uniform float uRoughness, uWavePeakScatterStrength, uScatterStrength;
@@ -126,7 +132,9 @@ export function createOceanMaterial(sky) {
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         vec3 lightDir = normalize(uSunDirection);
         vec3 halfwayDir = normalize(lightDir + viewDir);
-        float foam = clamp(vFoam, 0.0, 1.0);
+        float accFoam = 0.0;
+        ${sumFoam}
+        float foam = clamp(accFoam, 0.0, 1.0);
         float a = max(0.02, uRoughness + foam * 0.3);
 
         // Roughness-aware fresnel (ported from FFTWater.shader).
@@ -171,7 +179,7 @@ export function createOceanMaterial(sky) {
         float n1 = texture2D(uFoamTex, fuv + fdir * uTime * 0.03).r;
         float n2 = texture2D(uFoamTex, fuv * 1.9 - fdir * uTime * 0.05).g;
         float foamNoise = n1 * 0.6 + n2 * 0.4;
-        float foamMask = smoothstep(0.25, 0.8, foam * uFoamAmount * (0.4 + 1.2 * foamNoise));
+        float foamMask = smoothstep(0.18, 0.7, foam * uFoamAmount * (0.45 + 1.1 * foamNoise));
         output_ = mix(output_, uFoamColor, clamp(foamMask, 0.0, 1.0) * detailFade);
 
         float fog = smoothstep(uFogNear, uFogFar, length(cameraPosition - vWorldPos));

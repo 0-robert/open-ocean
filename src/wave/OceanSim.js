@@ -93,6 +93,24 @@ const ASSEMBLE_FRAG = /* glsl */`
   }
 `;
 
+// Foam accumulation: persist + advect + decay so foam trails crests as streaks.
+const FOAM_FRAG = /* glsl */`
+  precision highp float;
+  uniform sampler2D uInject;   // displacement target; .a = instantaneous Jacobian foam
+  uniform sampler2D uPrev;     // previous accumulated foam (.r)
+  uniform float uN, uDecay, uInjectRate;
+  uniform vec2 uFlow;          // uv advection per frame
+  out vec4 outColor;
+  void main() {
+    ivec2 id = ivec2(gl_FragCoord.xy);
+    vec2 uv = (vec2(id) + 0.5) / uN;
+    float prev = texture(uPrev, uv - uFlow).r;
+    float inject = texelFetch(uInject, id, 0).a;
+    float foam = max(prev * uDecay, inject * uInjectRate);
+    outColor = vec4(clamp(foam, 0.0, 1.0), 0.0, 0.0, 1.0);
+  }
+`;
+
 export class OceanSim {
   constructor(renderer) {
     const N = config.sim.N;
@@ -115,8 +133,14 @@ export class OceanSim {
         h0: spectrum.h0,
         displacement: makeFloatTarget(N, 1, LinearFilter), // xyz + foam
         slope: makeFloatTarget(N, 1, LinearFilter),        // normal slopes
+        foamPing: makeFloatTarget(N, 1, LinearFilter),     // accumulated foam (ping-pong)
+        foamPong: makeFloatTarget(N, 1, LinearFilter),
+        foamCurr: 0,
+        foamTexture: null,
       };
     });
+    // Cascades that contribute foam (skip the finest -> avoids speckle).
+    this.foamCount = Math.max(1, this.cascades.length - 1);
 
     // Shared scratch + engines reused across cascades (run sequentially).
     this.fftDisp = new FFT(renderer, N);
@@ -139,6 +163,14 @@ export class OceanSim {
       uFoamAdd: { value: config.foam.add }, uMode: { value: 0 },
     };
     this.assemblePass = new FullscreenPass(ASSEMBLE_FRAG, this.assembleUniforms);
+
+    const windRad = (config.spectrum.windDirection / 180) * Math.PI;
+    this.foamUniforms = {
+      uInject: { value: null }, uPrev: { value: null }, uN: { value: N },
+      uDecay: { value: config.foam.decay }, uInjectRate: { value: config.foam.injectRate },
+      uFlow: { value: new THREE.Vector2(Math.cos(windRad), Math.sin(windRad)).multiplyScalar(config.foam.flow) },
+    };
+    this.foamPass = new FullscreenPass(FOAM_FRAG, this.foamUniforms);
   }
 
   /** @param time seconds (already scaled by sim speed) */
@@ -165,10 +197,24 @@ export class OceanSim {
       au.uMode.value = 1;
       this.assemblePass.render(this.renderer, cascade.slope);
     }
+
+    // Foam accumulation (ping-pong) for the foam-contributing cascades.
+    const fu = this.foamUniforms;
+    for (let i = 0; i < this.foamCount; i++) {
+      const cascade = this.cascades[i];
+      const prev = cascade.foamCurr === 0 ? cascade.foamPing : cascade.foamPong;
+      const next = cascade.foamCurr === 0 ? cascade.foamPong : cascade.foamPing;
+      fu.uInject.value = cascade.displacement.texture;
+      fu.uPrev.value = prev.texture;
+      this.foamPass.render(this.renderer, next);
+      cascade.foamCurr ^= 1;
+      cascade.foamTexture = next.texture;
+    }
   }
 
   get displacementTextures() { return this.cascades.map((c) => c.displacement.texture); }
   get slopeTextures() { return this.cascades.map((c) => c.slope.texture); }
+  get foamTextures() { return this.cascades.slice(0, this.foamCount).map((c) => c.foamTexture); }
   get lengthScales() { return this.cascades.map((c) => c.lengthScale); }
   get heightTarget() { return this.cascades[0].displacement; } // dominant swell, for buoy readback
 }

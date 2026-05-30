@@ -105,6 +105,8 @@ renderer.setAnimationLoop((now) => {
     oceanMat.uniforms[`uDisp${i}`].value = disp[i];
     oceanMat.uniforms[`uSlope${i}`].value = slope[i];
   }
+  const foam = sim.foamTextures;
+  for (let i = 0; i < foam.length; i++) oceanMat.uniforms[`uFoam${i}`].value = foam[i];
   oceanMat.uniforms.uTime.value = t;
 
   water.position.x = controls.focal.x;

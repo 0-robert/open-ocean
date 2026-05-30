@@ -54,8 +54,10 @@ export function createOceanMaterial(sky) {
   // Generated per-cascade sampling.
   const sampler2Ds = Array.from({ length: nc }, (_, i) =>
     `uniform sampler2D uDisp${i}; uniform sampler2D uSlope${i}; uniform float uLengthScale${i};`).join('\n');
+  // Displace from all cascades, but only take FOAM from the larger cascades
+  // (the finest ripple cascade's Jacobian flips on single texels -> speckle).
   const sumDisp = Array.from({ length: nc }, (_, i) =>
-    `{ vec4 d = texture2D(uDisp${i}, flatPos.xz / uLengthScale${i}); disp += d.xyz; foam += d.a; }`).join('\n');
+    `{ vec4 d = texture2D(uDisp${i}, flatPos.xz / uLengthScale${i}); disp += d.xyz;${i < nc - 1 ? ' foam += d.a;' : ''} }`).join('\n');
   const sumSlope = Array.from({ length: nc }, (_, i) =>
     `slope += texture2D(uSlope${i}, vFlatXZ / uLengthScale${i}).xy;`).join('\n');
 

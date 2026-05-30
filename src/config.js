@@ -28,10 +28,12 @@ export const config = {
     accel: 12, maxSpeed: 16, linDrag: 0.5, turnAccel: 0.9, angDrag: 1.6,
     // RIGID-BODY BUOYANCY: real gravity + Archimedes force (~submerged depth) at
     // each hull point; the same forces produce pitch/roll torque (self-righting).
-    gravity: 9.81,
+    // World is ~2.9 units/metre (boat ~6.5 m = ~18.75 units), so gravity must be
+    // 9.81 * unitsPerMetre or the fall looks moon-slow. Buoyancy scales with it.
+    gravity: 28.0,
     mass: 1.0,
-    buoyancy: 2.2,      // upward force per unit submerged depth per hull point
-    heaveDrag: 1.3,     // vertical water resistance (damps the bob)
+    buoyancy: 6.3,      // upward force per unit submerged depth per hull point
+    heaveDrag: 1.6,     // vertical water resistance (damps the bob)
     inertia: 35.0,      // rotational inertia (higher = slower to rock)
     rotDrag: 2.8,       // angular water resistance
     rotMax: 0.5,        // clamp tilt (rad) so steep crests don't flip it

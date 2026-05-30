@@ -3,58 +3,72 @@ import { config } from '../config.js';
 import { skyGLSL } from '../glsl/sky.glsl.js';
 
 /**
- * Ocean surface material. Vertex shader displaces by the FFT displacement texture
- * (vertex texture fetch). Fragment shader ports the `fp` lighting from
- * docs/reference/FFTWater.shader: Schlick fresnel + Cook-Torrance/Beckmann specular
- * + the Atlas subsurface-scattering terms, with foam and fog.
+ * Ocean surface material. Vertex shader sums the FFT displacement of every
+ * cascade (vertex texture fetch); fragment sums the slopes/foam and applies the
+ * `fp` lighting ported from docs/reference/FFTWater.shader: roughness-aware
+ * fresnel + Cook-Torrance/Beckmann specular + the Atlas subsurface-scattering
+ * terms, with foam and fog.
  * @param {import('../env/Sky.js').Sky} sky shares the sky gradient + sun.
  */
 export function createOceanMaterial(sky) {
+  const nc = config.sim.cascades.length;
+
+  const uniforms = {
+    uNormalStrength: { value: config.lighting.normalStrength },
+    uDisplacementScale: { value: config.sim.displacementScale },
+    uSkyTop: { value: sky.topColor },
+    uSkyBottom: { value: sky.bottomColor },
+    uSunDirection: { value: sky.sunDirection },
+    uSunColor: { value: sky.sunColor },
+    uSunIrradiance: { value: new THREE.Color(...config.colors.sunIrradiance) },
+    uScatterColor: { value: new THREE.Color(...config.colors.scatter) },
+    uBubbleColor: { value: new THREE.Color(...config.colors.bubble) },
+    uFoamColor: { value: new THREE.Color(...config.colors.foam) },
+    uDeepColor: { value: new THREE.Color(...config.colors.deep) },
+    uRoughness: { value: config.lighting.roughness },
+    uWavePeakScatterStrength: { value: config.lighting.wavePeakScatterStrength },
+    uScatterStrength: { value: config.lighting.scatterStrength },
+    uScatterShadowStrength: { value: config.lighting.scatterShadowStrength },
+    uEnvironmentLightStrength: { value: config.lighting.environmentLightStrength },
+    uBubbleDensity: { value: config.lighting.bubbleDensity },
+    uHeightModifier: { value: config.lighting.heightModifier },
+    uFogColor: { value: new THREE.Color(...config.colors.fog) },
+    uFogNear: { value: config.fog.near },
+    uFogFar: { value: config.fog.far },
+  };
+  for (let i = 0; i < nc; i++) {
+    uniforms[`uDisp${i}`] = { value: null };
+    uniforms[`uSlope${i}`] = { value: null };
+    uniforms[`uLengthScale${i}`] = { value: config.sim.cascades[i].lengthScale };
+  }
+
+  // Generated per-cascade sampling.
+  const sampler2Ds = Array.from({ length: nc }, (_, i) =>
+    `uniform sampler2D uDisp${i}; uniform sampler2D uSlope${i}; uniform float uLengthScale${i};`).join('\n');
+  const sumDisp = Array.from({ length: nc }, (_, i) =>
+    `{ vec4 d = texture2D(uDisp${i}, flatPos.xz / uLengthScale${i}); disp += d.xyz; foam += d.a; }`).join('\n');
+  const sumSlope = Array.from({ length: nc }, (_, i) =>
+    `slope += texture2D(uSlope${i}, vFlatXZ / uLengthScale${i}).xy;`).join('\n');
+
   return new THREE.ShaderMaterial({
-    uniforms: {
-      uDisplacement: { value: null },
-      uSlope: { value: null },
-      uLengthScale: { value: config.sim.lengthScale },
-
-      uSkyTop: { value: sky.topColor },
-      uSkyBottom: { value: sky.bottomColor },
-      uSunDirection: { value: sky.sunDirection },
-      uSunColor: { value: sky.sunColor },
-
-      uSunIrradiance: { value: new THREE.Color(...config.colors.sunIrradiance) },
-      uScatterColor: { value: new THREE.Color(...config.colors.scatter) },
-      uBubbleColor: { value: new THREE.Color(...config.colors.bubble) },
-      uFoamColor: { value: new THREE.Color(...config.colors.foam) },
-      uDeepColor: { value: new THREE.Color(...config.colors.deep) },
-      uNormalStrength: { value: config.lighting.normalStrength },
-
-      uRoughness: { value: config.lighting.roughness },
-      uWavePeakScatterStrength: { value: config.lighting.wavePeakScatterStrength },
-      uScatterStrength: { value: config.lighting.scatterStrength },
-      uScatterShadowStrength: { value: config.lighting.scatterShadowStrength },
-      uEnvironmentLightStrength: { value: config.lighting.environmentLightStrength },
-      uBubbleDensity: { value: config.lighting.bubbleDensity },
-      uHeightModifier: { value: config.lighting.heightModifier },
-
-      uFogColor: { value: new THREE.Color(...config.colors.fog) },
-      uFogNear: { value: 600 },
-      uFogFar: { value: 3500 },
-    },
+    uniforms,
     vertexShader: /* glsl */`
-      uniform sampler2D uDisplacement;
-      uniform float uLengthScale;
+      ${Array.from({ length: nc }, (_, i) => `uniform sampler2D uDisp${i}; uniform float uLengthScale${i};`).join('\n')}
+      uniform float uDisplacementScale;
       varying vec3 vWorldPos;
-      varying vec2 vUv;
+      varying vec2 vFlatXZ;
       varying float vFoam;
       varying float vHeight;
       void main() {
-        vec3 wp = (modelMatrix * vec4(position, 1.0)).xyz;
-        vec2 uv = wp.xz / uLengthScale;
-        vec4 d = texture2D(uDisplacement, uv);
-        wp += d.xyz;
-        vFoam = d.a;
-        vHeight = d.y;
-        vUv = uv;
+        vec3 flatPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        vFlatXZ = flatPos.xz;
+        vec3 disp = vec3(0.0);
+        float foam = 0.0;
+        ${sumDisp}
+        disp *= uDisplacementScale;
+        vec3 wp = flatPos + disp;
+        vFoam = foam;
+        vHeight = disp.y;
         vWorldPos = wp;
         gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0);
       }`,
@@ -62,7 +76,7 @@ export function createOceanMaterial(sky) {
       precision highp float;
       #define PI 3.141592653589793
       ${skyGLSL}
-      uniform sampler2D uSlope;
+      ${sampler2Ds}
       uniform vec3 uSunIrradiance, uScatterColor, uBubbleColor, uFoamColor, uDeepColor;
       uniform float uNormalStrength;
       uniform float uRoughness, uWavePeakScatterStrength, uScatterStrength;
@@ -70,7 +84,7 @@ export function createOceanMaterial(sky) {
       uniform vec3 uFogColor;
       uniform float uFogNear, uFogFar;
       varying vec3 vWorldPos;
-      varying vec2 vUv;
+      varying vec2 vFlatXZ;
       varying float vFoam;
       varying float vHeight;
 
@@ -90,7 +104,9 @@ export function createOceanMaterial(sky) {
       }
 
       void main() {
-        vec2 slope = texture2D(uSlope, vUv).xy * uNormalStrength;
+        vec2 slope = vec2(0.0);
+        ${sumSlope}
+        slope *= uNormalStrength;
         vec3 normal = normalize(vec3(-slope.x, 1.0, -slope.y));
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         vec3 lightDir = normalize(uSunDirection);

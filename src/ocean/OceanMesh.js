@@ -8,7 +8,9 @@ export class OceanMesh {
     const geo = new THREE.PlaneGeometry(config.mesh.tiles, config.mesh.tiles, segs, segs).rotateX(-Math.PI / 2);
     this.mesh = new THREE.Mesh(geo, material);
     this.mesh.frustumCulled = false;
-    this._cell = config.sim.lengthScale / config.sim.N;
+    // Snap to the finest cascade's texel size so vertices don't swim.
+    const finestScale = Math.min(...config.sim.cascades.map((c) => c.lengthScale));
+    this._cell = finestScale / config.sim.N;
   }
 
   /** Snap the mesh under the focal point so vertices don't swim as you sail. */

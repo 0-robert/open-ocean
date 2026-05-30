@@ -84,14 +84,14 @@ export class SpectrumPass {
     this.conjPass = new FullscreenPass(CONJ_FRAG, { uSource: { value: null }, uN: { value: N } });
   }
 
-  build(p0, p1, sim) {
+  build(p0, p1, opts) {
     const u = this.initUniforms;
-    u.uLengthScale.value = sim.lengthScale;
-    u.uGravity.value = sim.gravity;
-    u.uDepth.value = sim.depth;
-    u.uLowCutoff.value = sim.lowCutoff;
-    u.uHighCutoff.value = sim.highCutoff;
-    u.uSeed.value = sim.seed;
+    u.uLengthScale.value = opts.lengthScale;
+    u.uGravity.value = opts.gravity;
+    u.uDepth.value = opts.depth;
+    u.uLowCutoff.value = opts.lowCutoff;
+    u.uHighCutoff.value = opts.highCutoff;
+    u.uSeed.value = opts.seed;
     u.uSpec0a.value.set(p0.scale, p0.angle, p0.spreadBlend, p0.swell);
     u.uSpec0b.value.set(p0.alpha, p0.peakOmega, p0.gamma, p0.shortWavesFade);
     u.uSpec1a.value.set(p1.scale, p1.angle, p1.spreadBlend, p1.swell);

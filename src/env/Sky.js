@@ -34,6 +34,6 @@ export class Sky {
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.frustumCulled = false;
     scene.add(this.mesh);
-    scene.fog = new THREE.Fog(new THREE.Color(...config.colors.fog), 600, 3500);
+    scene.fog = new THREE.Fog(new THREE.Color(...config.colors.fog), config.fog.near, config.fog.far);
   }
 }

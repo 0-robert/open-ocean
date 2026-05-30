@@ -96,33 +96,45 @@ const ASSEMBLE_FRAG = /* glsl */`
 export class OceanSim {
   constructor(renderer) {
     const N = config.sim.N;
+    const sim = config.sim;
     this.renderer = renderer;
     this.N = N;
 
-    this.spectrum = new SpectrumPass(renderer, N);
-    const p0 = buildSpectrumParams(config.spectrum, config.sim.gravity);
-    const p1 = { ...p0, scale: 0 }; // MVP: single spectrum; second disabled
-    this.h0 = this.spectrum.build(p0, p1, config.sim);
+    const p0 = buildSpectrumParams(config.spectrum, sim.gravity);
+    const p1 = { ...p0, scale: 0 }; // single JONSWAP spectrum per cascade for now
 
+    // One cascade per frequency band: each has its own initial spectrum + output maps.
+    this.cascades = sim.cascades.map((c) => {
+      const spectrum = new SpectrumPass(renderer, N);
+      spectrum.build(p0, p1, {
+        lengthScale: c.lengthScale, lowCutoff: c.lowCutoff, highCutoff: c.highCutoff,
+        gravity: sim.gravity, depth: sim.depth, seed: sim.seed,
+      });
+      return {
+        lengthScale: c.lengthScale,
+        h0: spectrum.h0,
+        displacement: makeFloatTarget(N, 1, LinearFilter), // xyz + foam
+        slope: makeFloatTarget(N, 1, LinearFilter),        // normal slopes
+      };
+    });
+
+    // Shared scratch + engines reused across cascades (run sequentially).
     this.fftDisp = new FFT(renderer, N);
     this.fftSlope = new FFT(renderer, N);
-
     this.dispSpectrum = makeFloatTarget(N);
     this.slopeSpectrum = makeFloatTarget(N);
-    this.displacement = makeFloatTarget(N, 1, LinearFilter); // xyz + foam, smoothly sampled
-    this.slope = makeFloatTarget(N, 1, LinearFilter);        // normal slopes, smoothly sampled
 
     this.evolveUniforms = {
-      uH0: { value: this.h0.texture },
-      uN: { value: N }, uLengthScale: { value: config.sim.lengthScale },
-      uGravity: { value: config.sim.gravity }, uRepeatTime: { value: config.sim.repeatTime },
+      uH0: { value: null },
+      uN: { value: N }, uLengthScale: { value: 0 },
+      uGravity: { value: sim.gravity }, uRepeatTime: { value: sim.repeatTime },
       uTime: { value: 0 }, uMode: { value: 0 },
     };
     this.evolvePass = new FullscreenPass(EVOLVE_FRAG, this.evolveUniforms);
 
     this.assembleUniforms = {
       uDisp: { value: null }, uSlope: { value: null },
-      uLambda: { value: new THREE.Vector2(...config.sim.lambda) },
+      uLambda: { value: new THREE.Vector2(...sim.lambda) },
       uFoamBias: { value: config.foam.bias }, uFoamThreshold: { value: config.foam.threshold },
       uFoamAdd: { value: config.foam.add }, uMode: { value: 0 },
     };
@@ -132,25 +144,31 @@ export class OceanSim {
   /** @param time seconds (already scaled by sim speed) */
   update(time) {
     const eu = this.evolveUniforms;
-    eu.uTime.value = time;
-    eu.uMode.value = 0;
-    this.evolvePass.render(this.renderer, this.dispSpectrum);
-    eu.uMode.value = 1;
-    this.evolvePass.render(this.renderer, this.slopeSpectrum);
-
-    const dispSpatial = this.fftDisp.run(this.dispSpectrum);
-    const slopeSpatial = this.fftSlope.run(this.slopeSpectrum);
-
     const au = this.assembleUniforms;
-    au.uDisp.value = dispSpatial.texture;
-    au.uSlope.value = slopeSpatial.texture;
-    au.uMode.value = 0;
-    this.assemblePass.render(this.renderer, this.displacement);
-    au.uMode.value = 1;
-    this.assemblePass.render(this.renderer, this.slope);
+    eu.uTime.value = time;
+
+    for (const cascade of this.cascades) {
+      eu.uH0.value = cascade.h0.texture;
+      eu.uLengthScale.value = cascade.lengthScale;
+      eu.uMode.value = 0;
+      this.evolvePass.render(this.renderer, this.dispSpectrum);
+      eu.uMode.value = 1;
+      this.evolvePass.render(this.renderer, this.slopeSpectrum);
+
+      const dispSpatial = this.fftDisp.run(this.dispSpectrum);
+      const slopeSpatial = this.fftSlope.run(this.slopeSpectrum);
+
+      au.uDisp.value = dispSpatial.texture;
+      au.uSlope.value = slopeSpatial.texture;
+      au.uMode.value = 0;
+      this.assemblePass.render(this.renderer, cascade.displacement);
+      au.uMode.value = 1;
+      this.assemblePass.render(this.renderer, cascade.slope);
+    }
   }
 
-  get displacementTexture() { return this.displacement.texture; }
-  get slopeTexture() { return this.slope.texture; }
-  get heightTarget() { return this.displacement; } // .y channel = height
+  get displacementTextures() { return this.cascades.map((c) => c.displacement.texture); }
+  get slopeTextures() { return this.cascades.map((c) => c.slope.texture); }
+  get lengthScales() { return this.cascades.map((c) => c.lengthScale); }
+  get heightTarget() { return this.cascades[0].displacement; } // dominant swell, for buoy readback
 }

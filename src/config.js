@@ -1,22 +1,29 @@
 export const config = {
   sim: {
-    N: 256,                 // FFT resolution (power of two)
-    lengthScale: 250,       // patch size in world units (reference lengthScale1)
+    N: 256,                 // FFT resolution per cascade (power of two)
     gravity: 9.81,
-    depth: 20,
+    depth: 200,             // deep water so big swells aren't suppressed by the TMA correction
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [1.3, 1.3],     // horizontal (choppy) displacement strength [x, z]
-    lowCutoff: 0.0001,
-    highCutoff: 9000,
+    lambda: [1.1, 1.1],     // horizontal (choppy) displacement strength [x, z]
+    displacementScale: 2.2, // global wave-height multiplier (visibility)
     seed: 0,
+    // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
+    // cutoffs) so they don't double-count: swell, waves, ripples. Non-harmonic
+    // length scales make the combined tiling period effectively invisible.
+    cascades: [
+      { lengthScale: 250, lowCutoff: 0.0001, highCutoff: 0.6 },
+      { lengthScale: 90,  lowCutoff: 0.6,    highCutoff: 3.0 },
+      { lengthScale: 28,  lowCutoff: 3.0,    highCutoff: 9000 },
+    ],
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 12.0, windDirection: 22.0, fetch: 100000,
-    spreadBlend: 1.0, swell: 0.2, peakEnhancement: 3.3, shortWavesFade: 0.01,
+    scale: 1.0, windSpeed: 22.0, windDirection: 22.0, fetch: 100000,
+    spreadBlend: 1.0, swell: 0.5, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
-  mesh: { tiles: 400, quadRes: 1.5 },     // grid extent (world units) and vertices per unit
+  mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
+  fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   foam: { bias: -0.4, threshold: 0.0, add: 0.9 },
   colors: {
     deep: [0.02, 0.22, 0.30],        // body color of the water (deep teal)

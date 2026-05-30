@@ -44,8 +44,12 @@ renderer.setAnimationLoop((now) => {
   t += dt * config.sim.speed;
 
   sim.update(t);
-  oceanMat.uniforms.uDisplacement.value = sim.displacementTexture;
-  oceanMat.uniforms.uSlope.value = sim.slopeTexture;
+  const dispTex = sim.displacementTextures;
+  const slopeTex = sim.slopeTextures;
+  for (let i = 0; i < dispTex.length; i++) {
+    oceanMat.uniforms[`uDisp${i}`].value = dispTex[i];
+    oceanMat.uniforms[`uSlope${i}`].value = slopeTex[i];
+  }
 
   sampler.refresh();
   const surfaceY = buoy.update(controls.focal.x, controls.focal.z, sampler);

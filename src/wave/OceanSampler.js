@@ -50,12 +50,14 @@ export class OceanSampler {
   }
 
   getHeightAndNormal(x, z) {
-    const u = x / config.sim.lengthScale, v = z / config.sim.lengthScale;
-    const h = bilinearSample(this.height, this.N, u, v);
+    const L = config.sim.cascades[0].lengthScale;
+    const amp = config.sim.displacementScale;
+    const u = x / L, v = z / L;
+    const h = bilinearSample(this.height, this.N, u, v) * amp;
     const e = 1 / this.N;
-    const hx = bilinearSample(this.height, this.N, u + e, v) - bilinearSample(this.height, this.N, u - e, v);
-    const hz = bilinearSample(this.height, this.N, u, v + e) - bilinearSample(this.height, this.N, u, v - e);
-    const scale = config.sim.lengthScale * 2 * e;
+    const hx = (bilinearSample(this.height, this.N, u + e, v) - bilinearSample(this.height, this.N, u - e, v)) * amp;
+    const hz = (bilinearSample(this.height, this.N, u, v + e) - bilinearSample(this.height, this.N, u, v - e)) * amp;
+    const scale = L * 2 * e;
     return { height: h, normal: [-hx / scale, 1, -hz / scale] };
   }
 }

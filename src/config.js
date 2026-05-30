@@ -24,7 +24,7 @@ export const config = {
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
-  foam: { bias: 0.78, threshold: 0.0, add: 1.0, amount: 3.0, decay: 0.97, injectRate: 1.0, flow: 0.0006 },
+  foam: { bias: 0.62, threshold: 0.0, add: 1.0, amount: 2.2, decay: 0.97, injectRate: 1.0, flow: 0.0006 },
   colors: {
     deep: [0.0, 0.28, 0.38],         // bright teal trough (SoT)
     scatter: [0.15, 0.6, 0.62],      // bright cyan SSS glow (less saturated)

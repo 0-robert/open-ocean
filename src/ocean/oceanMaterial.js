@@ -179,7 +179,7 @@ export function createOceanMaterial(sky) {
         float n1 = texture2D(uFoamTex, fuv + fdir * uTime * 0.03).r;
         float n2 = texture2D(uFoamTex, fuv * 1.9 - fdir * uTime * 0.05).g;
         float foamNoise = n1 * 0.6 + n2 * 0.4;
-        float foamMask = smoothstep(0.18, 0.7, foam * uFoamAmount * (0.45 + 1.1 * foamNoise));
+        float foamMask = smoothstep(0.3, 0.78, foam * uFoamAmount * (0.45 + 1.1 * foamNoise));
         output_ = mix(output_, uFoamColor, clamp(foamMask, 0.0, 1.0) * detailFade);
 
         float fog = smoothstep(uFogNear, uFogFar, length(cameraPosition - vWorldPos));

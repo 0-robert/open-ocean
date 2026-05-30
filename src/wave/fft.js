@@ -60,25 +60,27 @@ export class FFT {
     let read;
 
     // First horizontal pass reads the external input, writes into pingA.
+    // NOTE: the Tessendorf ocean uses an UNNORMALIZED inverse sum — the spectrum
+    // amplitude already carries the physical scale, so we never divide by N.
     this.uniforms.uSource.value = inputTarget.texture;
     this.uniforms.uHorizontal.value = true;
     this.uniforms.uStage.value = 0;
-    this.uniforms.uNormalize.value = (this.stages === 1);
+    this.uniforms.uNormalize.value = false;
     this.pass.render(this.renderer, this.pingA);
     read = this.pingA;
 
-    const step = (horizontal, stage, normalize) => {
+    const step = (horizontal, stage) => {
       this.uniforms.uSource.value = read.texture;
       this.uniforms.uHorizontal.value = horizontal;
       this.uniforms.uStage.value = stage;
-      this.uniforms.uNormalize.value = normalize;
+      this.uniforms.uNormalize.value = false;
       const write = read === this.pingA ? this.pingB : this.pingA;
       this.pass.render(this.renderer, write);
       read = write;
     };
 
-    for (let s = 1; s < this.stages; s++) step(true, s, s === lastStage);
-    for (let s = 0; s < this.stages; s++) step(false, s, s === lastStage);
+    for (let s = 1; s < this.stages; s++) step(true, s);
+    for (let s = 0; s < this.stages; s++) step(false, s);
     return read;
   }
 }

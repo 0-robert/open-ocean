@@ -13,7 +13,7 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 2.0, windDirection: 22.0, fetch: 100000,
+    scale: 1.0, windSpeed: 12.0, windDirection: 22.0, fetch: 100000,
     spreadBlend: 1.0, swell: 0.2, peakEnhancement: 3.3, shortWavesFade: 0.01,
   },
   mesh: { tiles: 400, quadRes: 1.5 },     // grid extent (world units) and vertices per unit

@@ -155,8 +155,11 @@ renderer.setAnimationLoop((now) => {
   for (let i = 0; i < foam.length; i++) oceanMat.uniforms[`uFoam${i}`].value = foam[i];
   oceanMat.uniforms.uTime.value = t;
 
-  water.position.x = boat.worldX;
-  water.position.z = boat.worldZ;
+  // Snap the water patch to its own grid cell so the mesh vertices stay on fixed
+  // world positions (the wave field is world-locked) -> no swimming/jiggle up close.
+  const cell = 800 / 1536;
+  water.position.x = Math.round(boat.worldX / cell) * cell;
+  water.position.z = Math.round(boat.worldZ / cell) * cell;
 
   sampler.refresh();
   boat.update(sampler, dt, controls.keys);

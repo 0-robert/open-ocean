@@ -8,7 +8,7 @@ export class Boat {
     scene.add(this.group);
 
     this.mesh = null;
-    this.sizecoefficient = .1
+    this.sizecoefficient = .3
     this.loaded = false;
     this.draft = 2.0*this.sizecoefficient; // visual seating offset (hull bottom below boat origin)
 

@@ -12,7 +12,7 @@ import { Buoy } from './objects/Buoy.js';
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.5;
+renderer.toneMappingExposure = 0.62;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
@@ -35,7 +35,7 @@ const water = new Water(new THREE.PlaneGeometry(800, 800, 1536, 1536), {
   waterNormals,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
-  waterColor: 0x0e5a6b,
+  waterColor: 0x1278a0,
   distortionScale: 3.7,
   fog: false,
 });
@@ -48,10 +48,10 @@ const sky = new Sky();
 sky.scale.setScalar(20000);
 scene.add(sky);
 const skyU = sky.material.uniforms;
-skyU['turbidity'].value = 10;
-skyU['rayleigh'].value = 2;
-skyU['mieCoefficient'].value = 0.005;
-skyU['mieDirectionalG'].value = 0.8;
+skyU['turbidity'].value = 1.2;   // low haze -> clean saturated blue
+skyU['rayleigh'].value = 4.0;    // stronger blue scattering
+skyU['mieCoefficient'].value = 0.003;
+skyU['mieDirectionalG'].value = 0.7;
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envScene = new THREE.Scene();
@@ -65,7 +65,7 @@ function setSun(elevationDeg, azimuthDeg) {
   scene.environment = pmrem.fromScene(envScene).texture;
   scene.add(sky);
 }
-setSun(12, 150);
+setSun(24, 150);
 
 const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.5);
 keyLight.position.copy(sun).multiplyScalar(100);

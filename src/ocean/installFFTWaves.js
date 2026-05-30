@@ -82,6 +82,10 @@ export function installFFTWaves(material, sim) {
        vec3 surfaceNormal = normalize( fftNormal + noise.xzy * vec3( 1.0, 0.0, 1.0 ) * 0.35 * detailFade );`,
     );
 
+    // Less mirror reflectance so the (stylized) water color shows through at
+    // grazing angles instead of washing out to pale horizon sky.
+    shader.fragmentShader = shader.fragmentShader.replace('float rf0 = 0.3;', 'float rf0 = 0.08;');
+
     // Blend foam into the final color.
     shader.fragmentShader = shader.fragmentShader.replace(
       'vec3 outgoingLight = albedo;',

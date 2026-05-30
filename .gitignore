@@ -4,3 +4,8 @@ dist/
 .DS_Store
 
 scripts/ocean-probe.png
+
+# user assets/screenshots
+*.zip
+/image.png
+/image copy*.png

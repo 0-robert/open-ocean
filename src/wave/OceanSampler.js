@@ -23,41 +23,81 @@ export class OceanSampler {
     this.renderer = renderer;
     this.sim = sim;
     this.N = config.sim.N;
-    this.rgba = new Float32Array(this.N * this.N * 4);
-    this.height = new Float32Array(this.N * this.N);
-    this._busy = false;
+    this.nc = config.sim.cascades.length;
+    
+    // Arrays for each cascade
+    this.rgbaBuffers = Array.from({ length: this.nc }, () => new Float32Array(this.N * this.N * 4));
+    this.heightBuffers = Array.from({ length: this.nc }, () => new Float32Array(this.N * this.N));
+    
+    this._busy = Array.from({ length: this.nc }, () => false);
     this.enabled = true;
   }
 
-  /** Pull the latest height field off the GPU (call once per frame). */
+  /** Pull the latest height field off the GPU for all cascades. */
   async refresh() {
-    if (!this.enabled || this._busy) return;
-    this._busy = true;
-    const t = this.sim.heightTarget;
+    if (!this.enabled) return;
+    
+    const targets = this.sim.cascades.map(c => c.displacement);
+    
+    const promises = [];
+    for (let i = 0; i < this.nc; i++) {
+      if (this._busy[i]) continue;
+      this._busy[i] = true;
+      promises.push(this._refreshCascade(i, targets[i]));
+    }
+    // We don't await them here to avoid blocking the main loop,
+    // but the next frame will use the updated buffers.
+  }
+
+  async _refreshCascade(i, target) {
     try {
       if (this.renderer.readRenderTargetPixelsAsync) {
-        await this.renderer.readRenderTargetPixelsAsync(t, 0, 0, this.N, this.N, this.rgba);
+        await this.renderer.readRenderTargetPixelsAsync(target, 0, 0, this.N, this.N, this.rgbaBuffers[i]);
       } else {
-        this.renderer.readRenderTargetPixels(t, 0, 0, this.N, this.N, this.rgba);
+        this.renderer.readRenderTargetPixels(target, 0, 0, this.N, this.N, this.rgbaBuffers[i]);
       }
-      for (let i = 0; i < this.N * this.N; i++) this.height[i] = this.rgba[i * 4 + 1]; // .y
+      
+      const rgba = this.rgbaBuffers[i];
+      const height = this.heightBuffers[i];
+      for (let j = 0; j < this.N * this.N; j++) {
+        // In ASSEMBLE_FRAG, displacement is:
+        // outColor = vec4(displacement.x, displacement.y, displacement.z, foam)
+        // displacement.y is the height.
+        height[j] = rgba[j * 4 + 1]; 
+      }
     } catch (err) {
-      console.warn('OceanSampler readback failed; disabling buoy height sampling.', err);
-      this.enabled = false;
+      console.warn(`OceanSampler readback failed for cascade ${i}`, err);
     } finally {
-      this._busy = false;
+      this._busy[i] = false;
     }
   }
 
   getHeightAndNormal(x, z) {
-    const L = config.sim.cascades[0].lengthScale;
     const amp = config.sim.displacementScale;
-    const u = x / L, v = z / L;
-    const h = bilinearSample(this.height, this.N, u, v) * amp;
+    let totalH = 0;
+    let totalHx = 0;
+    let totalHz = 0;
+    
     const e = 1 / this.N;
-    const hx = (bilinearSample(this.height, this.N, u + e, v) - bilinearSample(this.height, this.N, u - e, v)) * amp;
-    const hz = (bilinearSample(this.height, this.N, u, v + e) - bilinearSample(this.height, this.N, u, v - e)) * amp;
-    const scale = L * 2 * e;
-    return { height: h, normal: [-hx / scale, 1, -hz / scale] };
+
+    for (let i = 0; i < this.nc; i++) {
+      const L = config.sim.cascades[i].lengthScale;
+      const u = x / L, v = z / L;
+      const height = this.heightBuffers[i];
+      
+      const h = bilinearSample(height, this.N, u, v);
+      const hx = (bilinearSample(height, this.N, u + e, v) - bilinearSample(height, this.N, u - e, v));
+      const hz = (bilinearSample(height, this.N, u, v + e) - bilinearSample(height, this.N, u, v - e));
+      
+      const scale = L * 2 * e;
+      totalH += h;
+      totalHx += hx / scale;
+      totalHz += hz / scale;
+    }
+    
+    return { 
+      height: totalH * amp, 
+      normal: [-totalHx * amp, 1, -totalHz * amp] 
+    };
   }
 }

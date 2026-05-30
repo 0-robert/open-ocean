@@ -1,11 +1,11 @@
 export const config = {
   sim: {
-    N: 256,                 // FFT resolution per cascade (power of two)
+    N: 512,                 // FFT resolution per cascade (power of two)
     gravity: 9.81,
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [0.8, 0.8],     // horizontal (choppy) displacement strength [x, z]
+    lambda: [0.9, 0.9],     // horizontal (choppy) displacement strength [x, z]
     displacementScale: 1.1, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber

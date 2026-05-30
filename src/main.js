@@ -11,11 +11,12 @@ import { OrbitFollowControls } from './camera/OrbitFollowControls.js';
 import { OceanSim } from './wave/OceanSim.js';
 import { OceanSampler } from './wave/OceanSampler.js';
 import { createOceanMaterial } from './ocean/oceanMaterial.js';
+import { Boat } from './objects/Boat.js';
 
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.42;
+renderer.toneMappingExposure = 0.5;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
@@ -27,24 +28,26 @@ const sun = new THREE.Vector3();
 // --- FFT ocean simulation ---
 const sim = new OceanSim(renderer);
 const sampler = new OceanSampler(renderer, sim);
+const boat = new Boat(scene);
+window.__boat = boat;
 
 // --- Sky (three.js atmospheric scattering) for background + buoy env ---
 const sky = new Sky();
 sky.scale.setScalar(20000);
 scene.add(sky);
 const skyU = sky.material.uniforms;
-skyU['turbidity'].value = 1.2;
-skyU['rayleigh'].value = 4.0;
-skyU['mieCoefficient'].value = 0.003;
-skyU['mieDirectionalG'].value = 0.7;
+skyU['turbidity'].value = 0.8;
+skyU['rayleigh'].value = 2.4;
+skyU['mieCoefficient'].value = 0.005;
+skyU['mieDirectionalG'].value = 0.75;
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envScene = new THREE.Scene();
 
 // --- Custom SSS water material driven by the FFT sim ---
 const skyAdapter = {
-  topColor: new THREE.Color(0x2a6fb0),
-  bottomColor: new THREE.Color(0xb8dcf0),
+  topColor: new THREE.Color(0x2f7ed6),     // rich blue zenith for water reflection
+  bottomColor: new THREE.Color(0x9ec9ec),  // lighter blue horizon
   sunDirection: sun,
   sunColor: new THREE.Color(0xfff2dd),
 };
@@ -56,6 +59,7 @@ oceanMat.uniforms.uFoamTex.value = foamTex;
 const water = new THREE.Mesh(new THREE.PlaneGeometry(800, 800, 1536, 1536), oceanMat);
 water.rotation.x = -Math.PI / 2;
 water.frustumCulled = false;
+water.receiveShadow = true;
 scene.add(water);
 
 function setSun(elevationDeg, azimuthDeg) {
@@ -67,10 +71,17 @@ function setSun(elevationDeg, azimuthDeg) {
   scene.environment = pmrem.fromScene(envScene).texture;
   scene.add(sky);
 }
-setSun(24, 150);
+setSun(32, 150);
 
 const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.5);
 keyLight.position.copy(sun).multiplyScalar(100);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.left = -500;
+keyLight.shadow.camera.right = 500;
+keyLight.shadow.camera.top = 500;
+keyLight.shadow.camera.bottom = -500;
+keyLight.shadow.camera.far = 2000;
 scene.add(keyLight);
 
 // --- Post: SELECTIVE bloom (water only; sky excluded so it doesn't wash out) ---
@@ -144,13 +155,15 @@ renderer.setAnimationLoop((now) => {
   for (let i = 0; i < foam.length; i++) oceanMat.uniforms[`uFoam${i}`].value = foam[i];
   oceanMat.uniforms.uTime.value = t;
 
-  water.position.x = controls.focal.x;
-  water.position.z = controls.focal.z;
+  water.position.x = boat.worldX;
+  water.position.z = boat.worldZ;
 
   sampler.refresh();
-  const surfaceY = sampler.getHeightAndNormal(controls.focal.x, controls.focal.z).height;
-
-  controls.update(dt, surfaceY);
+  boat.update(sampler, dt, controls.keys);
+  
+  const cameraSurfaceY = sampler.getHeightAndNormal(boat.worldX, boat.worldZ).height;
+  controls.focal.set(boat.worldX, 0, boat.worldZ);
+  controls.update(dt, cameraSurfaceY);
 
   if (dbg) {
     dbg.dbgMat.uniforms.tex.value = (debugMode === 'slope' ? sim.slopeTextures : sim.displacementTextures)[0];
@@ -162,7 +175,7 @@ renderer.setAnimationLoop((now) => {
   sky.visible = false;
   const prevBg = scene.background;
   scene.background = null;
-  bloomComposer.render();
+  // bloomComposer.render();
   sky.visible = true;
   scene.background = prevBg;
   finalComposer.render();

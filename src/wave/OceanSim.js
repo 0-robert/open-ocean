@@ -131,10 +131,10 @@ export class OceanSim {
       return {
         lengthScale: c.lengthScale,
         h0: spectrum.h0,
-        displacement: makeFloatTarget(N, 1, LinearFilter), // xyz + foam
-        slope: makeFloatTarget(N, 1, LinearFilter),        // normal slopes
-        foamPing: makeFloatTarget(N, 1, LinearFilter),     // accumulated foam (ping-pong)
-        foamPong: makeFloatTarget(N, 1, LinearFilter),
+        displacement: makeFloatTarget(N, 1, THREE.LinearFilter), // xyz + foam (RGBA)
+        slope: makeFloatTarget(N, 1, THREE.LinearFilter),        // normal slopes (RG)
+        foamPing: makeFloatTarget(N, 1, THREE.LinearFilter),     // accumulated foam (ping-pong)
+        foamPong: makeFloatTarget(N, 1, THREE.LinearFilter),
         foamCurr: 0,
         foamTexture: null,
       };

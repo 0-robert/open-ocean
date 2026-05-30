@@ -32,7 +32,7 @@ export class FullscreenPass {
  */
 export function makeFloatTarget(N, count = 1, filter = THREE.NearestFilter) {
   return new THREE.WebGLRenderTarget(N, N, {
-    type: THREE.HalfFloatType,
+    type: THREE.FloatType,
     format: THREE.RGBAFormat,
     minFilter: filter,
     magFilter: filter,

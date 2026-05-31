@@ -117,7 +117,10 @@ window.addEventListener('resize', () => {
   finalComposer.setSize(window.innerWidth, window.innerHeight);
 });
 
-createTuningPanel({ renderer, oceanMat, sim, bloom, config });
+// Live tuning panel — opt-in via ?tune so the default build is clean.
+if (new URLSearchParams(location.search).has('tune')) {
+  createTuningPanel({ renderer, oceanMat, sim, bloom, config });
+}
 
 let prev = performance.now();
 let t = 0;
@@ -203,7 +206,7 @@ renderer.setAnimationLoop((now) => {
   sky.visible = false;
   const prevBg = scene.background;
   scene.background = null;
-  // bloomComposer.render();
+  bloomComposer.render(); // water-only bloom pass (sky hidden)
   sky.visible = true;
   scene.background = prevBg;
   finalComposer.render();

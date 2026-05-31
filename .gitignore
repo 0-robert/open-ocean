@@ -9,3 +9,7 @@ scripts/ocean-probe.png
 *.zip
 /image.png
 /image copy*.png
+
+# copyrighted transcripts / scratch
+*.txt
+BOAT_INTEGRATION_ATTEMPT.md

@@ -8,7 +8,7 @@ import { skyGLSL } from '../glsl/sky.glsl.js';
  * `fp` lighting ported from docs/reference/FFTWater.shader: roughness-aware
  * fresnel + Cook-Torrance/Beckmann specular + the Atlas subsurface-scattering
  * terms, with foam and fog.
- * @param {import('../env/Sky.js').Sky} sky shares the sky gradient + sun.
+ * @param {{topColor, bottomColor, sunDirection, sunColor}} sky shared sky gradient + sun.
  */
 export function createOceanMaterial(sky) {
   const nc = config.sim.cascades.length;

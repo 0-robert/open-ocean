@@ -7,6 +7,14 @@ shading, foam, and a sailable boat with rigid-body buoyancy.
 Built with [three.js](https://threejs.org) + WebGL2. The whole FFT runs on the GPU
 via fragment-shader ping-pong (no compute shaders required).
 
+## Demo
+
+<p align="center">
+  <video src="https://github.com/0-robert/open-ocean/raw/main/docs/demo.mp4" poster="docs/demo-poster.jpg" controls muted loop playsinline width="100%"></video>
+  <br>
+  <em>🚀 <strong><a href="REPLACE_WITH_LIVE_URL">Live demo</a></strong> &nbsp;·&nbsp; <a href="docs/demo.mp4">download the clip</a></em>
+</p>
+
 ## Run
 
 ```bash
@@ -51,7 +59,9 @@ before redistributing**:
 - The FFT/JONSWAP approach follows Tessendorf's "Simulating Ocean Water" and was
   informed by [GarrettGunnell/Water](https://github.com/GarrettGunnell/Water); the
   GLSL here is an original WebGL2 implementation.
-- **Boat model** (`public/models/boat/`) — royalty-free, no license restrictions.
+- **Boat model** — *not included* in this repo. The simulation runs without it (you
+  just won't see a boat). To add one, drop a glTF model at
+  `public/models/boat/Small_Sailing_Boat.gltf` (+ its `.bin` and `images/`).
 - **`textures/waternormals.jpg`** — from the three.js examples.
 
-The original code in `src/` is yours to license (add a `LICENSE` file).
+The original code in `src/` is MIT-licensed — see [`LICENSE`](LICENSE).

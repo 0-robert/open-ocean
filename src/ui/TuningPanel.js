@@ -5,9 +5,9 @@ const hex = (rgb) => '#' + new THREE.Color(rgb[0], rgb[1], rgb[2]).getHexString(
 
 /**
  * Live tuning panel. Every slider updates the running uniforms immediately.
- * @param {{renderer, oceanMat, sim, bloom, config}} refs
+ * @param {{renderer, oceanMat, sim, config}} refs
  */
-export function createTuningPanel({ renderer, oceanMat, sim, bloom, config }) {
+export function createTuningPanel({ renderer, oceanMat, sim, config }) {
   const gui = new GUI({ title: 'Ocean / Boat Tuning' });
   const u = oceanMat.uniforms;
   const setFlow = (v) => {
@@ -65,11 +65,8 @@ export function createTuningPanel({ renderer, oceanMat, sim, bloom, config }) {
   fb.add(config.boat, 'inertia', 5, 120, 1).name('rock inertia');
   fb.add(config.boat, 'rotDrag', 0, 12, 0.1).name('rock damping');
 
-  // ---- Bloom + Fog ----
-  const fp = gui.addFolder('Post / Fog');
-  fp.add(bloom, 'strength', 0, 1, 0.01).name('bloom strength');
-  fp.add(bloom, 'radius', 0, 1, 0.01).name('bloom radius');
-  fp.add(bloom, 'threshold', 0, 2, 0.01).name('bloom threshold');
+  // ---- Fog ----
+  const fp = gui.addFolder('Fog');
   fp.add(config.fog, 'near', 0, 1500, 10).onChange((v) => (u.uFogNear.value = v));
   fp.add(config.fog, 'far', 100, 5000, 10).onChange((v) => (u.uFogFar.value = v));
 

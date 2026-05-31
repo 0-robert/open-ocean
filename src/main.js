@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { config } from './config.js';
 import { createRenderer, handleResize } from './core/Renderer.js';
@@ -32,7 +30,6 @@ const sim = new OceanSim(renderer);
 const sampler = new OceanSampler(renderer, sim);
 const wakeTrail = new WakeTrail(renderer, { worldSize: 350, decay: config.foam.wakeDecay });
 const boat = new Boat(scene);
-window.__boat = boat;
 
 // --- Sky (three.js atmospheric scattering) for background + buoy env ---
 const sky = new Sky();
@@ -87,44 +84,19 @@ keyLight.shadow.camera.bottom = -500;
 keyLight.shadow.camera.far = 2000;
 scene.add(keyLight);
 
-// --- Post: SELECTIVE bloom (water only; sky excluded so it doesn't wash out) ---
-// bloomComposer renders the scene with the sky hidden -> only water highlights
-// bloom. finalComposer renders the full scene and additively mixes the bloom.
-const bloom = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-  config.bloom.strength, config.bloom.radius, config.bloom.threshold,
-);
-const bloomComposer = new EffectComposer(renderer);
-bloomComposer.renderToScreen = false;
-bloomComposer.addPass(new RenderPass(scene, camera));
-bloomComposer.addPass(bloom);
-
-const mixPass = new ShaderPass(new THREE.ShaderMaterial({
-  uniforms: { baseTexture: { value: null }, bloomTexture: { value: bloomComposer.renderTarget2.texture } },
-  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-  fragmentShader: `uniform sampler2D baseTexture; uniform sampler2D bloomTexture; varying vec2 vUv;
-    void main(){ gl_FragColor = texture2D(baseTexture, vUv) + texture2D(bloomTexture, vUv); }`,
-}), 'baseTexture');
-mixPass.needsSwap = true;
-
-const finalComposer = new EffectComposer(renderer);
-finalComposer.addPass(new RenderPass(scene, camera));
-finalComposer.addPass(mixPass);
-finalComposer.addPass(new OutputPass());
-
-window.addEventListener('resize', () => {
-  bloomComposer.setSize(window.innerWidth, window.innerHeight);
-  finalComposer.setSize(window.innerWidth, window.innerHeight);
-});
+// --- Post: tonemapping / color-space pass ---
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new OutputPass());
+window.addEventListener('resize', () => composer.setSize(window.innerWidth, window.innerHeight));
 
 // Live tuning panel — opt-in via ?tune so the default build is clean.
 if (new URLSearchParams(location.search).has('tune')) {
-  createTuningPanel({ renderer, oceanMat, sim, bloom, config });
+  createTuningPanel({ renderer, oceanMat, sim, config });
 }
 
 let prev = performance.now();
 let t = 0;
-window.__ocean = { THREE, scene, camera, controls, water, oceanMat, sky, sim, config, setSun, bloom };
 
 // --- Debug: ?debug=disp|slope|height renders a raw FFT cascade-0 texture fullscreen ---
 const debugMode = new URLSearchParams(location.search).get('debug');
@@ -202,12 +174,5 @@ renderer.setAnimationLoop((now) => {
     renderer.render(dbg.dbgScene, dbg.dbgCam);
     return;
   }
-  // Selective bloom: extract water-only highlights (sky hidden), then composite.
-  sky.visible = false;
-  const prevBg = scene.background;
-  scene.background = null;
-  bloomComposer.render(); // water-only bloom pass (sky hidden)
-  sky.visible = true;
-  scene.background = prevBg;
-  finalComposer.render();
+  composer.render();
 });

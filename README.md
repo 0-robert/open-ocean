@@ -48,11 +48,10 @@ This project depends on / was informed by third-party work — **review their li
 before redistributing**:
 
 - **three.js** and **lil-gui** (npm deps) — MIT.
-- **FFT/JONSWAP reference** in `docs/reference/` is ported from
-  [GarrettGunnell/Water](https://github.com/GarrettGunnell/Water); retain that
-  project's license/attribution if you redistribute these files.
-- **Boat model** (`public/models/boat/`) — supply the model's own license; confirm
-  redistribution rights before publishing.
+- The FFT/JONSWAP approach follows Tessendorf's "Simulating Ocean Water" and was
+  informed by [GarrettGunnell/Water](https://github.com/GarrettGunnell/Water); the
+  GLSL here is an original WebGL2 implementation.
+- **Boat model** (`public/models/boat/`) — royalty-free, no license restrictions.
 - **`textures/waternormals.jpg`** — from the three.js examples.
 
 The original code in `src/` is yours to license (add a `LICENSE` file).

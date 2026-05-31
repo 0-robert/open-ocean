@@ -40,7 +40,6 @@ export const config = {
     sampleScale: 0.9,   // hull-extent fraction used for buoyancy sampling
   },
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
-  bloom: { strength: 0.15, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: {
     bias: 0.6, threshold: 0.0, add: 0.15, amount: 4.2,
     decay: 0.968,       // per-frame foam persistence (tuned)

@@ -10,7 +10,7 @@ via fragment-shader ping-pong (no compute shaders required).
 ## Demo
 
 <p align="center">
-  <img src="docs/demo.gif" width="100%" alt="FFT ocean — a small boat sailing rough turquoise seas">
+  <img src="docs/demo.webp" width="100%" alt="FFT ocean — a small boat sailing rough turquoise seas">
 </p>
 
 ## Run

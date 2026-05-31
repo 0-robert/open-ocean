@@ -45,6 +45,9 @@ export function createOceanMaterial(sky) {
     uBoatDir: { value: new THREE.Vector2(0, 1) },
     uBoatHalf: { value: new THREE.Vector2(0, 0) },
     uBoatDip: { value: 0.6 }, // how deep the hull presses the water down (small = no flying gap)
+    uWakeTex: { value: null },
+    uWakeCenter: { value: new THREE.Vector2(0, 0) },
+    uWakeWorldSize: { value: 350 },
     uWindDir: { value: new THREE.Vector2(
       Math.cos((config.spectrum.windDirection / 180) * Math.PI),
       Math.sin((config.spectrum.windDirection / 180) * Math.PI),
@@ -119,6 +122,9 @@ export function createOceanMaterial(sky) {
       uniform sampler2D uFoamTex;
       uniform vec2 uWindDir;
       uniform vec2 uBoatPos, uBoatDir, uBoatHalf;
+      uniform sampler2D uWakeTex;
+      uniform vec2 uWakeCenter;
+      uniform float uWakeWorldSize;
       varying vec3 vWorldPos;
       varying vec2 vFlatXZ;
       varying float vFoam;
@@ -197,6 +203,13 @@ export function createOceanMaterial(sky) {
         float n2 = texture2D(uFoamTex, fuv * 1.9 - fdir * uTime * 0.05).g;
         float foamNoise = n1 * 0.6 + n2 * 0.4;
         float foamMask = smoothstep(0.24, 0.74, foam * uFoamAmount * (0.45 + 1.1 * foamNoise));
+
+        // World-space boat wake foam (non-tiling, follows the ship's path).
+        vec2 wuv = (vWorldPos.xz - uWakeCenter) / uWakeWorldSize + 0.5;
+        if (wuv.x > 0.0 && wuv.x < 1.0 && wuv.y > 0.0 && wuv.y < 1.0) {
+          float wake = texture2D(uWakeTex, wuv).r * (0.4 + 0.6 * foamNoise);
+          foamMask = max(foamMask, smoothstep(0.06, 0.5, wake));
+        }
         output_ = mix(output_, uFoamColor, clamp(foamMask, 0.0, 1.0) * detailFade);
 
         float fog = smoothstep(uFogNear, uFogFar, length(cameraPosition - vWorldPos));

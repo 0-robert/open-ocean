@@ -10,6 +10,7 @@ import { createRenderer, handleResize } from './core/Renderer.js';
 import { OrbitFollowControls } from './camera/OrbitFollowControls.js';
 import { OceanSim } from './wave/OceanSim.js';
 import { OceanSampler } from './wave/OceanSampler.js';
+import { WakeTrail } from './wave/WakeTrail.js';
 import { createOceanMaterial } from './ocean/oceanMaterial.js';
 import { Boat } from './objects/Boat.js';
 import { createTuningPanel } from './ui/TuningPanel.js';
@@ -29,6 +30,7 @@ const sun = new THREE.Vector3();
 // --- FFT ocean simulation ---
 const sim = new OceanSim(renderer);
 const sampler = new OceanSampler(renderer, sim);
+const wakeTrail = new WakeTrail(renderer, { worldSize: 350, decay: config.foam.wakeDecay });
 const boat = new Boat(scene);
 window.__boat = boat;
 
@@ -147,13 +149,6 @@ renderer.setAnimationLoop((now) => {
   prev = now;
   t += dt * config.sim.speed;
 
-  // Boat wake: inject foam behind the stern, scaled by speed (none when idle) ->
-  // persistence + drift leave a trail following the ship's movement.
-  const wOff = config.foam.wakeOffset;
-  sim.wakeX = boat.worldX - Math.sin(boat.yaw) * wOff;
-  sim.wakeZ = boat.worldZ - Math.cos(boat.yaw) * wOff;
-  sim.wakeStrength = boat.loaded ? config.foam.wakeStrength * Math.min(Math.abs(boat.speed) / 4, 1) : 0;
-
   sim.update(t);
   const disp = sim.displacementTextures;
   const slope = sim.slopeTextures;
@@ -180,6 +175,17 @@ renderer.setAnimationLoop((now) => {
     oceanMat.uniforms.uBoatDir.value.set(Math.sin(boat.yaw), Math.cos(boat.yaw));
     oceanMat.uniforms.uBoatHalf.value.set(boat.halfLength * 1.05, boat.halfWidth * 1.25);
   }
+
+  // World-space wake: inject foam at the stern (follows the ship's actual path).
+  wakeTrail.decay = config.foam.wakeDecay;
+  const wOff = config.foam.wakeOffset;
+  const sternX = boat.worldX - Math.sin(boat.yaw) * wOff;
+  const sternZ = boat.worldZ - Math.cos(boat.yaw) * wOff;
+  const wakeStr = boat.loaded ? config.foam.wakeStrength * Math.min(Math.abs(boat.speed) / 4, 1) : 0;
+  wakeTrail.update(boat.worldX, boat.worldZ, sternX, sternZ, wakeStr, config.foam.wakeRadius);
+  oceanMat.uniforms.uWakeTex.value = wakeTrail.texture;
+  oceanMat.uniforms.uWakeCenter.value.copy(wakeTrail.center);
+  oceanMat.uniforms.uWakeWorldSize.value = wakeTrail.worldSize;
   
   // Camera follows the boat. Use the boat's own smooth vertical position (NOT the
   // async height readback, which is stepwise/laggy and makes the camera jitter).

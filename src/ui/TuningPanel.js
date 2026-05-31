@@ -50,8 +50,9 @@ export function createTuningPanel({ renderer, oceanMat, sim, bloom, config }) {
   // ---- Wake (follows the ship) ----
   const fk = gui.addFolder('Boat Wake');
   fk.add(config.foam, 'wakeStrength', 0, 2, 0.05).name('strength');
-  fk.add(config.foam, 'wakeRadius', 1, 25, 0.5).name('width').onChange((v) => (sim.foamUniforms.uWakeRadius.value = v));
+  fk.add(config.foam, 'wakeRadius', 1, 25, 0.5).name('width');
   fk.add(config.foam, 'wakeOffset', 0, 30, 0.5).name('trail offset (stern)');
+  fk.add(config.foam, 'wakeDecay', 0.9, 0.999, 0.001).name('persistence');
 
   // ---- Boat physics (config.boat is read live each frame) ----
   const fb = gui.addFolder('Boat Physics');

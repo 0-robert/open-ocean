@@ -46,9 +46,10 @@ export const config = {
     decay: 0.99,        // per-frame foam persistence (~1s memory; trails without whiteout)
     injectRate: 1.0,
     flow: 0.0012,       // uv advection/frame (foam drifts downwind)
-    wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)
+    wakeStrength: 0.7,  // foam injected along the boat's path (scaled by speed)
     wakeRadius: 5.0,    // world-unit radius of the wake foam
     wakeOffset: 4.0,    // how far behind the stern the wake is injected
+    wakeDecay: 0.992,   // wake-trail persistence per frame (higher = longer trail)
   },
   colors: {
     deep: [0.0, 0.28, 0.38],         // bright teal trough (SoT)

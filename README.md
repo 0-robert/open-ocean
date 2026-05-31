@@ -10,9 +10,7 @@ via fragment-shader ping-pong (no compute shaders required).
 ## Demo
 
 <p align="center">
-  <video src="https://github.com/0-robert/open-ocean/raw/main/docs/demo.mp4" poster="docs/demo-poster.jpg" controls muted loop playsinline width="100%"></video>
-  <br>
-  <em>🚀 <strong><a href="REPLACE_WITH_LIVE_URL">Live demo</a></strong> &nbsp;·&nbsp; <a href="docs/demo.mp4">download the clip</a></em>
+  <img src="docs/demo.gif" width="100%" alt="FFT ocean — a small boat sailing rough turquoise seas">
 </p>
 
 ## Run

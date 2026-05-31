@@ -11,6 +11,7 @@ dist/
 *.zip
 *.txt
 *.gif
+!docs/demo.gif
 /image.png
 /image copy*.png
 BOAT_INTEGRATION_ATTEMPT.md

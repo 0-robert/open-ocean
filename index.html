@@ -9,10 +9,31 @@
       /* touch-action:none routes touch drags to our pointer handlers instead of
          browser pan/zoom gestures (needed for orbit + pinch on mobile). */
       canvas { display: block; touch-action: none; }
+
+      /* Landscape gate: on a portrait touch device, cover everything and ask the
+         user to rotate. Hides automatically the moment they're in landscape. */
+      #rotate {
+        position: fixed; inset: 0; z-index: 9999; display: none;
+        flex-direction: column; align-items: center; justify-content: center;
+        gap: 18px; text-align: center; padding: 24px;
+        background: radial-gradient(circle at 50% 40%, #15506b, #0a2a3a 80%);
+        color: #eaf6ff; font: 500 18px/1.4 system-ui, -apple-system, sans-serif;
+      }
+      #rotate .icon { font-size: 56px; animation: tip 1.8s ease-in-out infinite; }
+      #rotate small { color: #9fc4d8; font-size: 14px; }
+      @keyframes tip { 0%,55%,100% { transform: rotate(0); } 75% { transform: rotate(-90deg); } }
+      @media (orientation: portrait) and (pointer: coarse) {
+        #rotate { display: flex; }
+      }
     </style>
   </head>
   <body>
     <canvas id="app"></canvas>
+    <div id="rotate">
+      <div class="icon">📱</div>
+      <div>Please rotate your device</div>
+      <small>This experience is best in landscape</small>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

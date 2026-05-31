@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FFT Ocean</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Open Ocean</title>
     <style>
-      html, body { margin: 0; height: 100%; overflow: hidden; background: #0a2a3a; }
-      canvas { display: block; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0a2a3a; overscroll-behavior: none; }
+      /* touch-action:none routes touch drags to our pointer handlers instead of
+         browser pan/zoom gestures (needed for orbit + pinch on mobile). */
+      canvas { display: block; touch-action: none; }
     </style>
   </head>
   <body>

@@ -12,6 +12,7 @@ import { WakeTrail } from './wave/WakeTrail.js';
 import { createOceanMaterial } from './ocean/oceanMaterial.js';
 import { Boat } from './objects/Boat.js';
 import { createTuningPanel } from './ui/TuningPanel.js';
+import { createTouchControls } from './ui/TouchControls.js';
 
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
@@ -23,6 +24,7 @@ const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerH
 handleResize(renderer, camera);
 
 const controls = new OrbitFollowControls(camera, canvas);
+createTouchControls(controls.keys); // on-screen WASD for touch devices (no-op on desktop)
 const sun = new THREE.Vector3();
 
 // --- FFT ocean simulation ---

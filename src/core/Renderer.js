@@ -7,10 +7,12 @@ export function createRenderer(canvas) {
   if (!(gl instanceof WebGL2RenderingContext)) {
     throw new Error('WebGL2 is required for the FFT ocean simulation.');
   }
-  if (!gl.getExtension('EXT_color_buffer_float')) {
-    throw new Error('EXT_color_buffer_float is required (float render targets).');
+  // The FFT pipeline renders to RGBA16F targets. EXT_color_buffer_float makes
+  // 16F/32F renderable; some older mobile GPUs only expose the half-float variant,
+  // which is enough for us. Require at least one.
+  if (!gl.getExtension('EXT_color_buffer_float') && !gl.getExtension('EXT_color_buffer_half_float')) {
+    throw new Error('A floating-point colour buffer (EXT_color_buffer_float or _half_float) is required.');
   }
-  gl.getExtension('OES_texture_float_linear'); // optional: linear filtering of float textures
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;

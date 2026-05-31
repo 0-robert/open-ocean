@@ -25,14 +25,19 @@ export class FullscreenPass {
 }
 
 /**
- * Half-float RGBA render target sized N x N, repeat-wrapped.
+ * Half-float (RGBA16F) render target sized N x N, repeat-wrapped.
  * FFT ping-pong targets use NearestFilter (they read via exact texelFetch);
  * the final sampled maps (displacement/slope) use LinearFilter so the surface
  * interpolates smoothly instead of showing per-texel facets.
+ *
+ * HalfFloatType (not FloatType) is deliberate: RGBA16F is colour-renderable AND
+ * texture-filterable in core WebGL2, whereas RGBA32F linear filtering needs
+ * OES_texture_float_linear — which most mobile GPUs lack, making 32F maps sample
+ * as zero (flat ocean) on phones. 16F has ample precision for the wave field.
  */
 export function makeFloatTarget(N, count = 1, filter = THREE.NearestFilter) {
   return new THREE.WebGLRenderTarget(N, N, {
-    type: THREE.FloatType,
+    type: THREE.HalfFloatType,
     format: THREE.RGBAFormat,
     minFilter: filter,
     magFilter: filter,

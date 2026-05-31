@@ -1,5 +1,15 @@
 import { config } from '../config.js';
 
+/** Decode one IEEE-754 half-float (Uint16 bit pattern) to a JS number. */
+function halfToFloat(h) {
+  const s = (h & 0x8000) >> 15;
+  const e = (h & 0x7c00) >> 10;
+  const f = h & 0x03ff;
+  if (e === 0) return (s ? -1 : 1) * Math.pow(2, -14) * (f / 1024);
+  if (e === 0x1f) return f ? NaN : (s ? -Infinity : Infinity);
+  return (s ? -1 : 1) * Math.pow(2, e - 15) * (1 + f / 1024);
+}
+
 /** Bilinearly sample a single-channel NxN array at fractional uv (wrapped). */
 export function bilinearSample(data, N, u, v) {
   u = ((u % 1) + 1) % 1;
@@ -40,7 +50,7 @@ export class OceanSampler {
     this.centerZ = 0;
     this.enabled = true;
     this.cascades = Array.from({ length: this.nc }, () => ({
-      rgba: new Float32Array(this.W * this.W * 4),
+      rgba: new Uint16Array(this.W * this.W * 4), // half-float (RGBA16F) readback
       height: new Float32Array(this.W * this.W),
       x0: 0, y0: 0, // window origin (texels) the current `height` buffer holds
       busy: false,
@@ -77,7 +87,7 @@ export class OceanSampler {
       } else {
         this.renderer.readRenderTargetPixels(target, x0, y0, W, W, c.rgba);
       }
-      for (let j = 0; j < W * W; j++) c.height[j] = c.rgba[j * 4 + 1]; // .y = height
+      for (let j = 0; j < W * W; j++) c.height[j] = halfToFloat(c.rgba[j * 4 + 1]); // .y = height
       c.x0 = x0;
       c.y0 = y0;
     } catch (err) {

@@ -12,15 +12,39 @@ export class OrbitFollowControls {
     this.yaw = 0.5; this.pitch = 0.22; this.dist = 48;
     this.minZoom = minZoom; this.maxZoom = maxZoom; this.moveSpeed = moveSpeed;
     this.keys = new Set();
-    this._dragging = false; this._lastSmoothY = 0;
+    this._lastSmoothY = 0;
 
-    domElement.addEventListener('mousedown', () => (this._dragging = true));
-    window.addEventListener('mouseup', () => (this._dragging = false));
-    window.addEventListener('mousemove', (e) => {
-      if (!this._dragging) return;
-      this.yaw -= e.movementX * 0.005;
-      this.pitch = clampPitch(this.pitch - e.movementY * 0.005);
+    // Pointer Events unify mouse + touch: one pointer orbits, two pinch-zoom.
+    const pointers = new Map(); // pointerId -> {x, y}
+    let pinchDist = 0;
+    const pair = () => [...pointers.values()];
+
+    domElement.addEventListener('pointerdown', (e) => {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        const [a, b] = pair();
+        pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      }
     });
+    window.addEventListener('pointermove', (e) => {
+      const p = pointers.get(e.pointerId);
+      if (!p) return;
+      const dx = e.clientX - p.x, dy = e.clientY - p.y;
+      p.x = e.clientX; p.y = e.clientY;
+      if (pointers.size === 1) {
+        this.yaw -= dx * 0.005;
+        this.pitch = clampPitch(this.pitch - dy * 0.005);
+      } else if (pointers.size === 2) {
+        const [a, b] = pair();
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        this.dist = clampZoom(this.dist - (d - pinchDist) * 0.5, this.minZoom, this.maxZoom);
+        pinchDist = d;
+      }
+    });
+    const release = (e) => pointers.delete(e.pointerId);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+
     domElement.addEventListener('wheel', (e) => {
       this.dist = clampZoom(this.dist + e.deltaY * 0.05, this.minZoom, this.maxZoom);
       e.preventDefault();

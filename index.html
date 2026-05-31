@@ -23,15 +23,23 @@
       #rotate {
         position: fixed; inset: 0; z-index: 9999; display: none;
         flex-direction: column; align-items: center; justify-content: center;
-        gap: 18px; text-align: center; padding: 24px;
-        background: radial-gradient(circle at 50% 40%, #15506b, #0a2a3a 80%);
-        color: #eaf6ff;
+        gap: 24px; text-align: center; padding: 32px;
+        background:
+          radial-gradient(130% 90% at 50% -10%, rgba(86,178,212,0.20), transparent 55%),
+          linear-gradient(168deg, #0f3445 0%, #0c2735 45%, #061018 100%);
+        background-color: #07141c;
+        color: #eaf6ff; line-height: 1.45;
         font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-        font-weight: 700; font-size: 18px; line-height: 1.4;
       }
-      #rotate .icon { font-size: 56px; animation: tip 1.8s ease-in-out infinite; }
-      #rotate small { color: #9fc4d8; font-size: 14px; font-weight: 400; }
-      @keyframes tip { 0%,55%,100% { transform: rotate(0); } 75% { transform: rotate(-90deg); } }
+      #rotate .icon {
+        width: 58px; height: 58px; color: #d6eef8;
+        filter: drop-shadow(0 8px 22px rgba(0,0,0,0.4));
+        transform-origin: 50% 50%;
+        animation: tip 2.6s cubic-bezier(.65,0,.35,1) infinite;
+      }
+      #rotate .title { font-weight: 700; font-size: 21px; letter-spacing: 0.2px; }
+      #rotate small { color: #8fb6c9; font-size: 14px; font-weight: 400; letter-spacing: 0.3px; }
+      @keyframes tip { 0%,46%,100% { transform: rotate(0deg); } 70%,86% { transform: rotate(-90deg); } }
       @media (orientation: portrait) and (pointer: coarse) {
         #rotate { display: flex; }
       }
@@ -40,9 +48,12 @@
   <body>
     <canvas id="app"></canvas>
     <div id="rotate">
-      <div class="icon">📱</div>
-      <div>Please rotate your device</div>
-      <small>This experience is best in landscape</small>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+        <line x1="10.5" y1="18.7" x2="13.5" y2="18.7" />
+      </svg>
+      <div class="title">Rotate your device</div>
+      <small>Best experienced in landscape</small>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

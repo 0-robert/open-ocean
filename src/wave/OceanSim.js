@@ -139,6 +139,9 @@ export class OceanSim {
       });
       return {
         lengthScale: c.lengthScale,
+        lowCutoff: c.lowCutoff,
+        highCutoff: c.highCutoff,
+        spectrum,                                                // kept for live rebuild
         h0: spectrum.h0,
         displacement: makeFloatTarget(N, 1, THREE.LinearFilter), // xyz + foam (RGBA)
         slope: makeFloatTarget(N, 1, THREE.LinearFilter),        // normal slopes (RG)
@@ -235,6 +238,19 @@ export class OceanSim {
 
   get displacementTextures() { return this.cascades.map((c) => c.displacement.texture); }
   get slopeTextures() { return this.cascades.map((c) => c.slope.texture); }
+  /** Recompute the initial spectra (call after changing wind speed / spectrum). */
+  rebuildSpectrum() {
+    const sim = config.sim;
+    const p0 = buildSpectrumParams(config.spectrum, sim.gravity);
+    const p1 = { ...p0, scale: 0 };
+    for (const c of this.cascades) {
+      c.spectrum.build(p0, p1, {
+        lengthScale: c.lengthScale, lowCutoff: c.lowCutoff, highCutoff: c.highCutoff,
+        gravity: sim.gravity, depth: sim.depth, seed: sim.seed,
+      });
+    }
+  }
+
   get foamTextures() { return this.cascades.slice(0, this.foamCount).map((c) => c.foamTexture); }
   get lengthScales() { return this.cascades.map((c) => c.lengthScale); }
   get heightTarget() { return this.cascades[0].displacement; } // dominant swell, for buoy readback

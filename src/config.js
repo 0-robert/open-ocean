@@ -48,6 +48,7 @@ export const config = {
     flow: 0.0012,       // uv advection/frame (foam drifts downwind)
     wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)
     wakeRadius: 5.0,    // world-unit radius of the wake foam
+    wakeOffset: 4.0,    // how far behind the stern the wake is injected
   },
   colors: {
     deep: [0.0, 0.28, 0.38],         // bright teal trough (SoT)

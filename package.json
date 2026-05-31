@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "lil-gui": "^0.21.0",
     "three": "^0.169.0"
   },
   "devDependencies": {

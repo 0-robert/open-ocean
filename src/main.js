@@ -12,6 +12,7 @@ import { OceanSim } from './wave/OceanSim.js';
 import { OceanSampler } from './wave/OceanSampler.js';
 import { createOceanMaterial } from './ocean/oceanMaterial.js';
 import { Boat } from './objects/Boat.js';
+import { createTuningPanel } from './ui/TuningPanel.js';
 
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
@@ -114,6 +115,8 @@ window.addEventListener('resize', () => {
   finalComposer.setSize(window.innerWidth, window.innerHeight);
 });
 
+createTuningPanel({ renderer, oceanMat, sim, bloom, config });
+
 let prev = performance.now();
 let t = 0;
 window.__ocean = { THREE, scene, camera, controls, water, oceanMat, sky, sim, config, setSun, bloom };
@@ -144,9 +147,11 @@ renderer.setAnimationLoop((now) => {
   prev = now;
   t += dt * config.sim.speed;
 
-  // Boat wake: inject foam along the hull path, scaled by speed (none when idle).
-  sim.wakeX = boat.worldX;
-  sim.wakeZ = boat.worldZ;
+  // Boat wake: inject foam behind the stern, scaled by speed (none when idle) ->
+  // persistence + drift leave a trail following the ship's movement.
+  const wOff = config.foam.wakeOffset;
+  sim.wakeX = boat.worldX - Math.sin(boat.yaw) * wOff;
+  sim.wakeZ = boat.worldZ - Math.cos(boat.yaw) * wOff;
   sim.wakeStrength = boat.loaded ? config.foam.wakeStrength * Math.min(Math.abs(boat.speed) / 4, 1) : 0;
 
   sim.update(t);

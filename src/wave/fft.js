@@ -62,7 +62,7 @@ export class FFT {
     let read;
 
     // First horizontal pass reads the external input, writes into pingA.
-    // NOTE: the Tessendorf ocean uses an UNNORMALIZED inverse sum — the spectrum
+    // NOTE: the Tessendorf ocean uses an UNNORMALIZED inverse sum - the spectrum
     // amplitude already carries the physical scale, so we never divide by N.
     this.uniforms.uSource.value = inputTarget.texture;
     this.uniforms.uHorizontal.value = true;

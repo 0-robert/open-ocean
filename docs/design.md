@@ -1,11 +1,11 @@
-# FFT Ocean Water Simulation — Design
+# FFT Ocean Water Simulation - Design
 
 **Date:** 2026-05-30
 **Status:** Approved for planning
 
 ## 1. Goal
 
-A browser game featuring an **endless ocean** whose water looks like *Sea of Thieves*. This spec covers **the water simulation and rendering only**. A user-controlled boat and **buoyancy** are an explicit *next* phase — out of scope here — but the architecture must expose a clean seam so that integration is straightforward later.
+A browser game featuring an **endless ocean** whose water looks like *Sea of Thieves*. This spec covers **the water simulation and rendering only**. A user-controlled boat and **buoyancy** are an explicit *next* phase - out of scope here - but the architecture must expose a clean seam so that integration is straightforward later.
 
 ### Non-goals (this phase)
 - Boat, player controls beyond a free-roaming camera, buoyancy physics, wakes.
@@ -17,10 +17,10 @@ A browser game featuring an **endless ocean** whose water looks like *Sea of Thi
 *Sea of Thieves* water (and Black Flag, Crysis, and the *Titanic* CGI) is a genuine ocean simulation based on **Jerry Tessendorf's FFT method** ("Simulating Ocean Water", 2004). Oceanographic literature treats **Gerstner waves as unrealistic**; the FFT approach is the accepted technique. Key elements, drawn from Tessendorf, the Acerola video "I Tried Simulating The Entire Ocean", and the *Atlas* GDC talk:
 
 - The ocean is built in the **frequency domain** by sampling an oceanographic **spectrum** times Gaussian random numbers, then converted to a spatial heightfield via an **inverse FFT** (O(n log n); naive DFT at O(n²) is too slow).
-- SoT used the **Phillips spectrum**; the *Atlas* team recommend **JONSWAP** instead — more art-direction control (wind speed/direction/fetch, peak, directional spread, amplitude override, low-pass). We use JONSWAP.
+- SoT used the **Phillips spectrum**; the *Atlas* team recommend **JONSWAP** instead - more art-direction control (wind speed/direction/fetch, peak, directional spread, amplitude override, low-pass). We use JONSWAP.
 - **Horizontal (choppy) displacement** via additional IFFTs gives peaked, realistic waves.
 - **Cascades:** several FFT simulations at different spatial scales, summed, eliminate visible tiling and combine big swells with fine chop.
-- **Lighting** is a stylized **subsurface-scattering approximation** (the *Atlas* scatter terms), specular, and environment reflection — not strictly PBR.
+- **Lighting** is a stylized **subsurface-scattering approximation** (the *Atlas* scatter terms), specular, and environment reflection - not strictly PBR.
 - **Foam** is detected from the **Jacobian** of the displacement (negative where waves curl/break) and **accumulated in a texture with exponential decay**.
 
 ## 3. Technology choices
@@ -48,9 +48,9 @@ For each texel, evolve the frequency by Euler's formula `H̃(k,t) = H̃₀(k)·e
 
 ### 4.3 Inverse FFT
 `FFT` performs an inverse FFT per output field by ping-pong butterfly passes: `log₂N` horizontal passes then `log₂N` vertical passes, alternating between two render targets, using a precomputed **butterfly/twiddle texture**. Output spatial textures per cascade:
-- **Displacement** (x, y, z) — y is height, x/z are choppy displacement.
-- **Slope/normal** — exact normals from the slope IFFTs (cheaper central-difference normals are a fallback quality option).
-- **Jacobian** — folding metric for foam.
+- **Displacement** (x, y, z) - y is height, x/z are choppy displacement.
+- **Slope/normal** - exact normals from the slope IFFTs (cheaper central-difference normals are a fallback quality option).
+- **Jacobian** - folding metric for foam.
 
 ### 4.4 Cascades and combination
 `OceanSim` runs the above for **N cascades** and sums their contributions into combined displacement/normal/Jacobian results consumed by the renderer.
@@ -70,7 +70,7 @@ If measured frame time exceeds a budget over a rolling window, auto-downgrade on
 ### 4.5 Foam
 A persistent **foam texture** is updated each frame: where the combined **Jacobian < threshold** (waves folding), inject foam; apply **exponential decay** everywhere each frame so foam accumulates in turbulent areas and dissolves gradually. A `foamBias` knob increases coverage. Flat foam color initially; a stylized foam texture is a later enhancement.
 
-## 5. Mesh — endless clipmap
+## 5. Mesh - endless clipmap
 
 `OceanMesh` builds **concentric LOD rings**: an inner finely-tessellated grid surrounded by rings whose cell size doubles outward, each ring an L-shaped band covering the area its inner neighbour does not. Every frame:
 - **Re-center** the whole structure on the camera focal point; **snap** each ring to its own cell-size grid so vertices don't swim.
@@ -80,10 +80,10 @@ A persistent **foam texture** is updated each frame: where the combined **Jacobi
 
 Optional geomorph (CDLOD-style vertex morph across ring boundaries) is a later enhancement if popping is visible; Gerstner-free FFT displacement is smooth, so it is not expected to be necessary at first.
 
-## 6. Shading — stylized, SoT-like
+## 6. Shading - stylized, SoT-like
 
 Implemented in `oceanMaterial` (Three.js `ShaderMaterial`):
-- **Subsurface-scattering scatter term** (Atlas approximation): `scatterHeight + normalVisibility + Lambert + ambient`, each multiplied by a scatter color (blue), sun color, and ambient color — yields the green-blue hues of real water.
+- **Subsurface-scattering scatter term** (Atlas approximation): `scatterHeight + normalVisibility + Lambert + ambient`, each multiplied by a scatter color (blue), sun color, and ambient color - yields the green-blue hues of real water.
 - **Specular:** Blinn-Phong initially (PBR microfacet a later enhancement) for sun glints.
 - **Environment reflection:** Fresnel (Schlick) mix toward the sky color/cubemap at grazing angles.
 - **Height color gradient:** deep trough color → bright crest color, reinforcing the SoT read.
@@ -91,7 +91,7 @@ Implemented in `oceanMaterial` (Three.js `ShaderMaterial`):
 
 `Sky` provides a gradient sky dome + directional sun, the reflection source, and fog parameters shared with the ocean material.
 
-## 7. Camera & controls — Roblox-style orbit-follow
+## 7. Camera & controls - Roblox-style orbit-follow
 
 `OrbitFollowControls`:
 - **Mouse drag** orbits (yaw/pitch) around the focal point.
@@ -101,7 +101,7 @@ Implemented in `oceanMaterial` (Three.js `ShaderMaterial`):
 
 The focal point is the world anchor for the LOD-ring recenter and is exactly where the boat will attach later.
 
-## 8. Buoyancy seam — `OceanSampler`
+## 8. Buoyancy seam - `OceanSampler`
 
 The stable interface buoyancy will consume:
 
@@ -113,7 +113,7 @@ Backing implementation now: **async readback** of the combined displacement text
 
 **Choppy-displacement caveat:** because horizontal displacement moves a surface point sideways, the texel at `(x,z)` is not exactly the surface above `(x,z)`. For the single bobbing buoy now we sample vertical displacement directly (good enough). For accurate buoyancy later, a 1–2 iteration fixed-point inversion can be added behind the same interface without changing callers.
 
-`Buoy` is the first consumer: a small visible marker that samples `OceanSampler` each frame to **bob** (set y to height) and **tilt** (orient to normal) — validating the seam live.
+`Buoy` is the first consumer: a small visible marker that samples `OceanSampler` each frame to **bob** (set y to height) and **tilt** (orient to normal) - validating the seam live.
 
 ## 9. Module layout
 

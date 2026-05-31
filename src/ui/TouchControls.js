@@ -1,7 +1,7 @@
 /**
  * On-screen sailing controls for touch devices. Each button pushes the same key
  * codes the keyboard does (KeyW/A/S/D) into the shared `keys` Set that Boat.update
- * reads — so no boat-physics changes are needed. Hidden on mouse/desktop.
+ * reads - so no boat-physics changes are needed. Hidden on mouse/desktop.
  *
  * @param {Set<string>} keys - the live key set from OrbitFollowControls.
  * @returns {HTMLElement|null} the controls root (or null if not a touch device).

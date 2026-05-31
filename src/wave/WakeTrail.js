@@ -18,7 +18,7 @@ const WAKE_FRAG = /* glsl */`
     if (prevUv.x > 0.0 && prevUv.x < 1.0 && prevUv.y > 0.0 && prevUv.y < 1.0) {
       prev = texture(uPrev, prevUv).r * uDecay;
     }
-    // Inject foam at the stern (world space) — no wind advection, so the trail
+    // Inject foam at the stern (world space) - no wind advection, so the trail
     // records the boat's actual path (N, then S, then E, ...).
     float d = length(worldPos - uInjectPos);
     float inj = uStrength * smoothstep(uInjectRadius, 0.0, d);

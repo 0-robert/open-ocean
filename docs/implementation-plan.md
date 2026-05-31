@@ -1,10 +1,10 @@
-# FFT Ocean Water MVP — Implementation Plan
+# FFT Ocean Water MVP - Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Get a moving, Sea-of-Thieves-like FFT ocean running in the browser — a single-cascade Tessendorf/JONSWAP FFT simulation rendered on a camera-following grid, with stylized SSS lighting, sun specular, sky/fresnel reflection, foam, a Roblox-style orbit-follow camera, and a buoy that bobs on the surface via a CPU height readback.
+**Goal:** Get a moving, Sea-of-Thieves-like FFT ocean running in the browser - a single-cascade Tessendorf/JONSWAP FFT simulation rendered on a camera-following grid, with stylized SSS lighting, sun specular, sky/fresnel reflection, foam, a Roblox-style orbit-follow camera, and a buoy that bobs on the surface via a CPU height readback.
 
-**Architecture:** Port GarrettGunnell/Water (Unity compute-shader FFT) to **Three.js + WebGL2**. WebGL2 has no compute shaders or groupshared memory, so the GPU FFT becomes **fragment-shader ping-pong butterfly passes** using a precomputed butterfly texture, rendering into `RGBA16F` render targets. The frequency-domain spectrum, time evolution, IFFT, and map assembly are each fullscreen-quad passes. The ocean mesh samples the resulting displacement texture by vertex texture fetch; the fragment shader ports the reference's SSS lighting. A dedicated height readback feeds `OceanSampler` — the buoyancy seam — whose first consumer is the bobbing buoy.
+**Architecture:** Port GarrettGunnell/Water (Unity compute-shader FFT) to **Three.js + WebGL2**. WebGL2 has no compute shaders or groupshared memory, so the GPU FFT becomes **fragment-shader ping-pong butterfly passes** using a precomputed butterfly texture, rendering into `RGBA16F` render targets. The frequency-domain spectrum, time evolution, IFFT, and map assembly are each fullscreen-quad passes. The ocean mesh samples the resulting displacement texture by vertex texture fetch; the fragment shader ports the reference's SSS lighting. A dedicated height readback feeds `OceanSampler` - the buoyancy seam - whose first consumer is the bobbing buoy.
 
 **Tech Stack:** Vite, Three.js (r16x), WebGL2, plain JS + JSDoc, Vitest for unit tests.
 
@@ -42,7 +42,7 @@ tests/*.test.js           Vitest unit tests
 
 ---
 
-## Phase A — Scaffold, sky, camera (runnable: fly over a flat sea)
+## Phase A - Scaffold, sky, camera (runnable: fly over a flat sea)
 
 ### Task A1: Project scaffold
 
@@ -148,7 +148,7 @@ export function handleResize(renderer, camera) {
 }
 ```
 
-- [ ] **Step 2: Smoke-test in `main.js`** — replace contents:
+- [ ] **Step 2: Smoke-test in `main.js`** - replace contents:
 
 ```js
 import * as THREE from 'three';
@@ -166,7 +166,7 @@ handleResize(renderer, camera);
 renderer.setAnimationLoop(() => renderer.render(scene, camera));
 ```
 
-- [ ] **Step 3: Verify** — `npm run dev`. Expected: a solid light-blue canvas, no console errors. (If the machine lacks float targets you'll see the thrown error — that's the gate working.)
+- [ ] **Step 3: Verify** - `npm run dev`. Expected: a solid light-blue canvas, no console errors. (If the machine lacks float targets you'll see the thrown error - that's the gate working.)
 
 - [ ] **Step 4: Commit**
 
@@ -232,7 +232,7 @@ git commit -m "feat: central config ported from reference defaults"
 - Create: `src/camera/OrbitFollowControls.js`
 - Test: `tests/orbitControls.test.js`
 
-- [ ] **Step 1: Write the failing test** — `tests/orbitControls.test.js`
+- [ ] **Step 1: Write the failing test** - `tests/orbitControls.test.js`
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -255,7 +255,7 @@ describe('orbit camera clamps', () => {
 - [ ] **Step 2: Run test, verify it fails**
 
 Run: `npx vitest run tests/orbitControls.test.js`
-Expected: FAIL — module/exports not found.
+Expected: FAIL - module/exports not found.
 
 - [ ] **Step 3: Implement `src/camera/OrbitFollowControls.js`**
 
@@ -324,7 +324,7 @@ export class OrbitFollowControls {
 Run: `npx vitest run tests/orbitControls.test.js`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Wire into `main.js`** — add after camera creation, replacing the static lookAt and animation loop:
+- [ ] **Step 5: Wire into `main.js`** - add after camera creation, replacing the static lookAt and animation loop:
 
 ```js
 import { OrbitFollowControls } from './camera/OrbitFollowControls.js';
@@ -337,7 +337,7 @@ renderer.setAnimationLoop((now) => {
 });
 ```
 
-- [ ] **Step 6: Verify** — `npm run dev`. Drag to orbit, scroll to zoom, WASD to pan over the blank scene. Commit:
+- [ ] **Step 6: Verify** - `npm run dev`. Drag to orbit, scroll to zoom, WASD to pan over the blank scene. Commit:
 
 ```bash
 git add src/camera/OrbitFollowControls.js tests/orbitControls.test.js src/main.js
@@ -350,7 +350,7 @@ git commit -m "feat: Roblox-style orbit-follow camera"
 - Create: `src/env/Sky.js`
 - Modify: `src/main.js`
 
-- [ ] **Step 1: Implement `src/env/Sky.js`** — a large inward-facing gradient dome and a sun direction.
+- [ ] **Step 1: Implement `src/env/Sky.js`** - a large inward-facing gradient dome and a sun direction.
 
 ```js
 import * as THREE from 'three';
@@ -399,7 +399,7 @@ scene.add(new THREE.HemisphereLight(0xbfe3ff, 0x10394a, 1.0));
 ```
 (add `import { config } from './config.js';` at top)
 
-- [ ] **Step 3: Verify** — `npm run dev`. Expected: gradient sky with a sun disc, a flat blue plane you can orbit/zoom/pan over. **This is the Phase A milestone — it runs.**
+- [ ] **Step 3: Verify** - `npm run dev`. Expected: gradient sky with a sun disc, a flat blue plane you can orbit/zoom/pan over. **This is the Phase A milestone - it runs.**
 
 - [ ] **Step 4: Commit**
 
@@ -410,7 +410,7 @@ git commit -m "feat: gradient sky dome, sun, fog, placeholder water plane"
 
 ---
 
-## Phase B — FFT engine core (verified by round-trip)
+## Phase B - FFT engine core (verified by round-trip)
 
 ### Task B1: CPU FFT reference (tests only)
 
@@ -418,7 +418,7 @@ git commit -m "feat: gradient sky dome, sun, fog, placeholder water plane"
 - Create: `src/wave/fftReference.js`
 - Test: `tests/fft.test.js`
 
-- [ ] **Step 1: Write the failing test** — `tests/fft.test.js`
+- [ ] **Step 1: Write the failing test** - `tests/fft.test.js`
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -446,7 +446,7 @@ describe('CPU FFT reference', () => {
 - [ ] **Step 2: Run, verify fail**
 
 Run: `npx vitest run tests/fft.test.js`
-Expected: FAIL — exports missing.
+Expected: FAIL - exports missing.
 
 - [ ] **Step 3: Implement `src/wave/fftReference.js`** (iterative radix-2 Cooley-Tukey)
 
@@ -506,7 +506,7 @@ git commit -m "feat: CPU FFT reference for verification"
 
 This ports `ComputeTwiddleFactorAndInputIndices` (`docs/reference/FFTWater.compute:237-244`) to a precomputed texture: size `log2(N) × N`, each texel = `(twiddle.re, twiddle.im, indexA, indexB)`. The inverse FFT negates the twiddle imaginary part.
 
-- [ ] **Step 1: Write the failing test** — `tests/butterfly.test.js`
+- [ ] **Step 1: Write the failing test** - `tests/butterfly.test.js`
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -589,7 +589,7 @@ export const complexGLSL = /* glsl */`
 `;
 ```
 
-- [ ] **Step 2: Implement `src/core/fullscreenPass.js`** — render a fragment shader into a target.
+- [ ] **Step 2: Implement `src/core/fullscreenPass.js`** - render a fragment shader into a target.
 
 ```js
 import * as THREE from 'three';
@@ -637,7 +637,7 @@ git commit -m "feat: complex GLSL chunk + fullscreen-pass helper"
 - Create: `src/wave/fft.js`
 - Test: `tests/gpuFft.test.js` (jsdom + headless GL is unreliable, so this is a manual/browser-asserted check documented as a runtime self-test instead)
 
-GLSL FFT fragment shader: for each pixel, read the butterfly texel for the current `stage` (indexed by x for horizontal passes, y for vertical), gather the two source texels at the encoded indices along the pass axis, combine `a + cmul(twiddle, b)` independently for `.xy` and `.zw` complex channels. Ping-pong between two targets for `log2N` horizontal then `log2N` vertical passes. Normalize by `1/N` after each 1D axis (1/N² total) — matches `ifft1d`.
+GLSL FFT fragment shader: for each pixel, read the butterfly texel for the current `stage` (indexed by x for horizontal passes, y for vertical), gather the two source texels at the encoded indices along the pass axis, combine `a + cmul(twiddle, b)` independently for `.xy` and `.zw` complex channels. Ping-pong between two targets for `log2N` horizontal then `log2N` vertical passes. Normalize by `1/N` after each 1D axis (1/N² total) - matches `ifft1d`.
 
 - [ ] **Step 1: Implement `src/wave/fft.js`**
 
@@ -713,7 +713,7 @@ export class FFT {
 }
 ```
 
-- [ ] **Step 2: Add a browser self-test** — temporarily in `main.js`, upload a known float4 pattern, run forward via the CPU reference, push its spectrum to a target, IFFT on GPU, `readRenderTargetPixels`, and compare to the original within tolerance; `console.assert` and log PASS/FAIL.
+- [ ] **Step 2: Add a browser self-test** - temporarily in `main.js`, upload a known float4 pattern, run forward via the CPU reference, push its spectrum to a target, IFFT on GPU, `readRenderTargetPixels`, and compare to the original within tolerance; `console.assert` and log PASS/FAIL.
 
 ```js
 // TEMP verification (remove after): see plan Task B4 step 2
@@ -724,7 +724,7 @@ import { fft1d } from './wave/fftReference.js';
 ```
 Document the exact assertion you run and its console output here when executing.
 
-- [ ] **Step 3: Verify** — `npm run dev`, open console. Expected: "FFT round-trip PASS". If FAIL, the usual culprits are butterfly index encoding, normalization placement, or `texelFetch` y-flip — fix before proceeding.
+- [ ] **Step 3: Verify** - `npm run dev`, open console. Expected: "FFT round-trip PASS". If FAIL, the usual culprits are butterfly index encoding, normalization placement, or `texelFetch` y-flip - fix before proceeding.
 
 - [ ] **Step 4: Remove the temp self-test, commit**
 
@@ -735,7 +735,7 @@ git commit -m "feat: GPU ping-pong inverse FFT (round-trip verified)"
 
 ---
 
-## Phase C — Spectrum, simulation, displaced mesh (runnable: moving FFT water)
+## Phase C - Spectrum, simulation, displaced mesh (runnable: moving FFT water)
 
 ### Task C1: JONSWAP CPU params (TDD)
 
@@ -745,7 +745,7 @@ git commit -m "feat: GPU ping-pong inverse FFT (round-trip verified)"
 
 Ports `JonswapAlpha`, `JonswapPeakFrequency`, `FillSpectrumStruct` (`docs/reference/FFTWater.cs:706-723`).
 
-- [ ] **Step 1: Write the failing test** — `tests/jonswap.test.js`
+- [ ] **Step 1: Write the failing test** - `tests/jonswap.test.js`
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -771,7 +771,7 @@ describe('JONSWAP params', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify fail** — `npx vitest run tests/jonswap.test.js` → FAIL.
+- [ ] **Step 2: Run, verify fail** - `npx vitest run tests/jonswap.test.js` → FAIL.
 
 - [ ] **Step 3: Implement `src/wave/jonswap.js`**
 
@@ -797,7 +797,7 @@ export function buildSpectrumParams(s, g) {
 }
 ```
 
-- [ ] **Step 4: Run, verify pass** — `npx vitest run tests/jonswap.test.js` → PASS (3).
+- [ ] **Step 4: Run, verify pass** - `npx vitest run tests/jonswap.test.js` → PASS (3).
 
 - [ ] **Step 5: Commit**
 
@@ -811,9 +811,9 @@ git commit -m "feat: JONSWAP CPU parameter helpers"
 **Files:**
 - Create: `src/wave/spectrumPass.js`
 
-Two fullscreen passes building the `RGBA16F` initial-spectrum texture: pass 1 ports `CS_InitializeSpectrum` (`docs/reference/FFTWater.compute:134-169`) — JONSWAP × DirectionSpectrum × ShortWavesFade, Gaussian-weighted, writing `h0` into `.rg`. Pass 2 ports `CS_PackSpectrumConjugate` (`:171-179`) — reads the `(-k)` texel and writes `h0conj` into `.ba`. Port the helper functions verbatim (`Dispersion`, `DispersionDerivative`, `JONSWAP`, `DirectionSpectrum`, `Cosine2s`, `SpreadPower`, `NormalizationFactor`, `TMACorrection`, `ShortWavesFade`, `hash`, `UniformToGaussian`) into the fragment shader, translating HLSL→GLSL (`float2`→`vec2`, `rcp(x)`→`1.0/x`, `lerp`→`mix`, `saturate`→`clamp(...,0,1)`, `atan2`→`atan`, integer `hash` using `uint`). The spectrum params (8 floats) are passed as uniforms.
+Two fullscreen passes building the `RGBA16F` initial-spectrum texture: pass 1 ports `CS_InitializeSpectrum` (`docs/reference/FFTWater.compute:134-169`) - JONSWAP × DirectionSpectrum × ShortWavesFade, Gaussian-weighted, writing `h0` into `.rg`. Pass 2 ports `CS_PackSpectrumConjugate` (`:171-179`) - reads the `(-k)` texel and writes `h0conj` into `.ba`. Port the helper functions verbatim (`Dispersion`, `DispersionDerivative`, `JONSWAP`, `DirectionSpectrum`, `Cosine2s`, `SpreadPower`, `NormalizationFactor`, `TMACorrection`, `ShortWavesFade`, `hash`, `UniformToGaussian`) into the fragment shader, translating HLSL→GLSL (`float2`→`vec2`, `rcp(x)`→`1.0/x`, `lerp`→`mix`, `saturate`→`clamp(...,0,1)`, `atan2`→`atan`, integer `hash` using `uint`). The spectrum params (8 floats) are passed as uniforms.
 
-- [ ] **Step 1: Implement `src/wave/spectrumPass.js`** — exports `class SpectrumPass { constructor(renderer, N); build(params0, params1, simConfig) -> WebGLRenderTarget }`. The init fragment computes `K = (gl_FragCoord.xy - N/2) * 2π/lengthScale`, evaluates the spectrum, and writes `vec4(gaussWeighted_h0, 0, 0)`; the conjugate fragment does `texelFetch` at `ivec2((N-x)%N,(N-y)%N)` and packs. Include the full ported GLSL inline (see reference lines above for the exact expressions).
+- [ ] **Step 1: Implement `src/wave/spectrumPass.js`** - exports `class SpectrumPass { constructor(renderer, N); build(params0, params1, simConfig) -> WebGLRenderTarget }`. The init fragment computes `K = (gl_FragCoord.xy - N/2) * 2π/lengthScale`, evaluates the spectrum, and writes `vec4(gaussWeighted_h0, 0, 0)`; the conjugate fragment does `texelFetch` at `ivec2((N-x)%N,(N-y)%N)` and packs. Include the full ported GLSL inline (see reference lines above for the exact expressions).
 
 ```js
 import * as THREE from 'three';
@@ -841,7 +841,7 @@ export class SpectrumPass {
 
 (Execution note: write the full INIT_FRAG/CONJ_FRAG GLSL by porting the referenced HLSL functions line-for-line; they are long but mechanical. Keep them in this file.)
 
-- [ ] **Step 2: Visual verify** — temporarily render `h0.texture` to the screen with a debug quad; expect a symmetric speckled spectrum concentrated near the center (low frequencies). Commit:
+- [ ] **Step 2: Visual verify** - temporarily render `h0.texture` to the screen with a debug quad; expect a symmetric speckled spectrum concentrated near the center (low frequencies). Commit:
 
 ```bash
 git add src/wave/spectrumPass.js
@@ -896,9 +896,9 @@ export class OceanSim {
 }
 ```
 
-(Execution note: port `EVOLVE_FRAG` from `CS_UpdateSpectrumForFFT` — compute `K`, `htilde = cmul(h0, euler(ωt)) + cmul(h0conj, euler(-ωt))`, then the displacement/slope packings exactly as the HLSL. Port `ASSEMBLE_FRAG` from `CS_AssembleMaps` — `Permute` sign flip `(1 - 2*mod(x+y,2))`, Jacobian, `displacement = vec3(λ.x*dxdz.x, dydxz.x, λ.y*dxdz.y)`, slopes, instantaneous foam.)
+(Execution note: port `EVOLVE_FRAG` from `CS_UpdateSpectrumForFFT` - compute `K`, `htilde = cmul(h0, euler(ωt)) + cmul(h0conj, euler(-ωt))`, then the displacement/slope packings exactly as the HLSL. Port `ASSEMBLE_FRAG` from `CS_AssembleMaps` - `Permute` sign flip `(1 - 2*mod(x+y,2))`, Jacobian, `displacement = vec3(λ.x*dxdz.x, dydxz.x, λ.y*dxdz.y)`, slopes, instantaneous foam.)
 
-- [ ] **Step 2: Visual verify** — debug-render `displacement.texture`: expect smoothly varying RGB blobs that animate over time. Commit:
+- [ ] **Step 2: Visual verify** - debug-render `displacement.texture`: expect smoothly varying RGB blobs that animate over time. Commit:
 
 ```bash
 git add src/wave/OceanSim.js
@@ -950,7 +950,7 @@ export function createOceanMaterial() {
 }
 ```
 
-- [ ] **Step 2: Implement `src/ocean/OceanMesh.js`** — a grid that re-centers (snapped to texel size) on the focal point.
+- [ ] **Step 2: Implement `src/ocean/OceanMesh.js`** - a grid that re-centers (snapped to texel size) on the focal point.
 
 ```js
 import * as THREE from 'three';
@@ -972,7 +972,7 @@ export class OceanMesh {
 }
 ```
 
-- [ ] **Step 3: Wire into `main.js`** — remove the placeholder plane; create `OceanSim`, `OceanMesh`, set material textures each frame.
+- [ ] **Step 3: Wire into `main.js`** - remove the placeholder plane; create `OceanSim`, `OceanMesh`, set material textures each frame.
 
 ```js
 import { OceanSim } from './wave/OceanSim.js';
@@ -996,7 +996,7 @@ renderer.setAnimationLoop((now) => {
 });
 ```
 
-- [ ] **Step 4: Verify** — `npm run dev`. **Phase C milestone:** moving FFT waves on the grid, height-tinted, no obvious tiling within view. Commit:
+- [ ] **Step 4: Verify** - `npm run dev`. **Phase C milestone:** moving FFT waves on the grid, height-tinted, no obvious tiling within view. Commit:
 
 ```bash
 git add src/ocean/OceanMesh.js src/ocean/oceanMaterial.js src/main.js
@@ -1005,7 +1005,7 @@ git commit -m "feat: displaced ocean mesh sampling FFT textures"
 
 ---
 
-## Phase D — SoT-like shading (runnable: it looks like the ocean)
+## Phase D - SoT-like shading (runnable: it looks like the ocean)
 
 ### Task D1: SSS + specular + fresnel + foam fragment
 
@@ -1016,9 +1016,9 @@ Replace the debug fragment by porting the `fp` function from `docs/reference/FFT
 
 - [ ] **Step 1: Add lighting uniforms** to `createOceanMaterial` (sun dir/color, scatter/bubble/foam colors, roughness, the scatter strengths, environmentLightStrength, heightModifier).
 
-- [ ] **Step 2: Port the fragment shader** — full ported GLSL of `fp` with the slope-derived normal and a `skyColor(reflectDir)` environment term. Keep the height-gradient tint as a subtle base under the scatter.
+- [ ] **Step 2: Port the fragment shader** - full ported GLSL of `fp` with the slope-derived normal and a `skyColor(reflectDir)` environment term. Keep the height-gradient tint as a subtle base under the scatter.
 
-- [ ] **Step 3: Verify** — `npm run dev`. **Phase D milestone:** deep-to-bright color, sun glints tracking the sun, brighter sky reflection at grazing angles, white foam on steep/curling crests. Tune `config` colors/strengths until it reads as SoT-like.
+- [ ] **Step 3: Verify** - `npm run dev`. **Phase D milestone:** deep-to-bright color, sun glints tracking the sun, brighter sky reflection at grazing angles, white foam on steep/curling crests. Tune `config` colors/strengths until it reads as SoT-like.
 
 - [ ] **Step 4: Commit**
 
@@ -1029,7 +1029,7 @@ git commit -m "feat: SoT-style SSS + specular + fresnel + foam shading"
 
 ---
 
-## Phase E — Buoyancy seam + bobbing buoy (runnable: buoy rides the waves)
+## Phase E - Buoyancy seam + bobbing buoy (runnable: buoy rides the waves)
 
 ### Task E1: OceanSampler (async readback + bilinear)
 
@@ -1039,7 +1039,7 @@ git commit -m "feat: SoT-style SSS + specular + fresnel + foam shading"
 
 Mirrors `Buoyancy.cs`'s readback seam: each frame read back the displacement target's height channel into a CPU `Float32Array`, then `getHeightAndNormal(x,z)` bilinearly samples it (UV = `worldXZ / lengthScale`, wrapped). Async readback via `renderer.readRenderTargetPixelsAsync` (fallback to sync `readRenderTargetPixels`). MVP returns height (vertical displacement) and an up normal from neighboring texels.
 
-- [ ] **Step 1: Write the failing test** — `tests/sampler.test.js` (pure bilinear math, no GPU)
+- [ ] **Step 1: Write the failing test** - `tests/sampler.test.js` (pure bilinear math, no GPU)
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -1061,7 +1061,7 @@ describe('bilinear sample', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify fail** — `npx vitest run tests/sampler.test.js` → FAIL.
+- [ ] **Step 2: Run, verify fail** - `npx vitest run tests/sampler.test.js` → FAIL.
 
 - [ ] **Step 3: Implement `src/wave/OceanSampler.js`**
 
@@ -1108,7 +1108,7 @@ export class OceanSampler {
 }
 ```
 
-- [ ] **Step 4: Run, verify pass** — `npx vitest run tests/sampler.test.js` → PASS (3).
+- [ ] **Step 4: Run, verify pass** - `npx vitest run tests/sampler.test.js` → PASS (3).
 
 - [ ] **Step 5: Commit**
 
@@ -1147,7 +1147,7 @@ export class Buoy {
 }
 ```
 
-- [ ] **Step 2: Wire into `main.js`** — create sampler + buoy; each frame refresh sampler, place the buoy at the focal point, feed its surface height to the camera follow.
+- [ ] **Step 2: Wire into `main.js`** - create sampler + buoy; each frame refresh sampler, place the buoy at the focal point, feed its surface height to the camera follow.
 
 ```js
 import { OceanSampler } from './wave/OceanSampler.js';
@@ -1162,7 +1162,7 @@ ocean.recenter(controls.focal);
 ```
 (Remove the earlier `controls.update(dt, 0)` line so it isn't called twice.)
 
-- [ ] **Step 3: Verify** — `npm run dev`. **Phase E / MVP milestone:** the orange buoy rides up and down with the waves and tilts to the surface; the camera follows its smoothed height; WASD sails the whole scene endlessly with no obvious tiling. Run the full test suite: `npm test` → all green.
+- [ ] **Step 3: Verify** - `npm run dev`. **Phase E / MVP milestone:** the orange buoy rides up and down with the waves and tilts to the surface; the camera follows its smoothed height; WASD sails the whole scene endlessly with no obvious tiling. Run the full test suite: `npm test` → all green.
 
 - [ ] **Step 4: Commit**
 
@@ -1175,7 +1175,7 @@ git commit -m "feat: bobbing buoy consuming OceanSampler; camera follows surface
 
 ## Self-Review
 
-**Spec coverage:** WebGL2+Three.js+Vite (A1-A2) ✓; FFT/JONSWAP simulation (B,C) ✓; cascades — MVP single cascade, multi-cascade deferred (noted) ✓; clipmap — MVP following grid, clipmap deferred (noted) ✓; SSS+specular+fresnel+foam shading (D) ✓; height gradient (C4/D1) ✓; orbit-follow camera (A4) ✓; OceanSampler buoyancy seam + buoy (E) ✓; foam — MVP instantaneous, accumulation deferred (noted) ✓; error handling — capability gate (A2) + resize (A2) ✓ (context-loss deferred); testing — FFT/butterfly/jonswap/sampler/camera unit tests + visual milestones ✓.
+**Spec coverage:** WebGL2+Three.js+Vite (A1-A2) ✓; FFT/JONSWAP simulation (B,C) ✓; cascades - MVP single cascade, multi-cascade deferred (noted) ✓; clipmap - MVP following grid, clipmap deferred (noted) ✓; SSS+specular+fresnel+foam shading (D) ✓; height gradient (C4/D1) ✓; orbit-follow camera (A4) ✓; OceanSampler buoyancy seam + buoy (E) ✓; foam - MVP instantaneous, accumulation deferred (noted) ✓; error handling - capability gate (A2) + resize (A2) ✓ (context-loss deferred); testing - FFT/butterfly/jonswap/sampler/camera unit tests + visual milestones ✓.
 
 **Placeholder scan:** Tasks C2/C3 intentionally summarize long mechanical HLSL→GLSL ports with explicit source line references rather than duplicating ~300 lines of shader; every other task has complete code. The shader bodies to port are pinned to exact files/lines in `docs/reference/`. This is the one place execution must transcribe from the saved reference.
 
@@ -1184,4 +1184,4 @@ git commit -m "feat: bobbing buoy consuming OceanSampler; camera follows surface
 ---
 
 ## Deferred follow-up plan (after MVP)
-Second cascade (kill remaining tiling), foam accumulation texture (decay over frames), CDLOD clipmap rings + geomorph for a true horizon, quality presets + auto-detect, origin rebasing for far travel, PBR specular upgrade, sea-spray particles, context-loss recovery — then the boat + buoyancy phase building on `OceanSampler`.
+Second cascade (kill remaining tiling), foam accumulation texture (decay over frames), CDLOD clipmap rings + geomorph for a true horizon, quality presets + auto-detect, origin rebasing for far travel, PBR specular upgrade, sea-spray particles, context-loss recovery - then the boat + buoyancy phase building on `OceanSampler`.

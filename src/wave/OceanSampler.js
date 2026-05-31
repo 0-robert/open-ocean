@@ -34,7 +34,7 @@ function bilinearWindow(data, W, fx, fy) {
 }
 
 /**
- * Buoyancy seam: reads the FFT height field back to the CPU. OPTIMIZED — instead
+ * Buoyancy seam: reads the FFT height field back to the CPU. OPTIMIZED - instead
  * of reading the full N×N displacement of every cascade each frame (O(N²), ~12MB
  * at N=512), it reads only a small W×W window around the boat (O(W²), ~64KB),
  * since the boat samples a handful of points in a tiny region. Same query API.
@@ -45,7 +45,7 @@ export class OceanSampler {
     this.sim = sim;
     this.N = config.sim.N;
     this.nc = config.sim.cascades.length;
-    this.W = Math.min(64, this.N); // readback window (texels) — covers the hull span
+    this.W = Math.min(64, this.N); // readback window (texels) - covers the hull span
     this.centerX = 0;
     this.centerZ = 0;
     this.enabled = true;

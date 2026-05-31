@@ -32,7 +32,7 @@ export class FullscreenPass {
  *
  * HalfFloatType (not FloatType) is deliberate: RGBA16F is colour-renderable AND
  * texture-filterable in core WebGL2, whereas RGBA32F linear filtering needs
- * OES_texture_float_linear — which most mobile GPUs lack, making 32F maps sample
+ * OES_texture_float_linear - which most mobile GPUs lack, making 32F maps sample
  * as zero (flat ocean) on phones. 16F has ample precision for the wave field.
  */
 export function makeFloatTarget(N, count = 1, filter = THREE.NearestFilter) {

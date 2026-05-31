@@ -5,8 +5,8 @@ export const config = {
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [0.55, 0.55],   // horizontal (choppy) displacement strength [x, z]
-    displacementScale: 0.75, // global wave-height multiplier (visibility)
+    lambda: [1.35, 1.35],   // horizontal (choppy) displacement strength [x, z]
+    displacementScale: 0.65, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
     // cutoffs) so they don't double-count: swell, waves, ripples. Non-harmonic
@@ -19,7 +19,7 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 12.0, windDirection: 22.0, fetch: 100000,
+    scale: 1.0, windSpeed: 25.0, windDirection: 360.0, fetch: 100000,
     spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
@@ -43,7 +43,7 @@ export const config = {
   bloom: { strength: 0.15, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: {
     bias: 0.6, threshold: 0.0, add: 0.15, amount: 4.2,
-    decay: 0.986,       // per-frame foam persistence (tuned)
+    decay: 0.999,       // per-frame foam persistence (tuned)
     injectRate: 1.0,
     flow: 0.002,        // uv advection/frame (foam drifts downwind)
     wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)

@@ -42,12 +42,12 @@ export const config = {
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   bloom: { strength: 0.14, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: {
-    bias: 0.67, threshold: 0.0, add: 1.0, amount: 2.6,
-    decay: 0.995,       // per-frame foam persistence (~3s memory, was 0.97 = poppy)
+    bias: 0.25, threshold: 0.0, add: 1.0, amount: 1.8,
+    decay: 0.99,        // per-frame foam persistence (~1s memory; trails without whiteout)
     injectRate: 1.0,
     flow: 0.0012,       // uv advection/frame (foam drifts downwind)
-    wakeStrength: 0.9,  // foam injected along the boat's path (scaled by speed)
-    wakeRadius: 7.0,    // world-unit radius of the wake foam
+    wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)
+    wakeRadius: 5.0,    // world-unit radius of the wake foam
   },
   colors: {
     deep: [0.0, 0.28, 0.38],         // bright teal trough (SoT)

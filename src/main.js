@@ -90,10 +90,8 @@ composer.addPass(new RenderPass(scene, camera));
 composer.addPass(new OutputPass());
 window.addEventListener('resize', () => composer.setSize(window.innerWidth, window.innerHeight));
 
-// Live tuning panel — opt-in via ?tune so the default build is clean.
-if (new URLSearchParams(location.search).has('tune')) {
-  createTuningPanel({ renderer, oceanMat, sim, config });
-}
+// Live tuning panel (the ✕ in its title bar removes it entirely).
+createTuningPanel({ renderer, oceanMat, sim, config });
 
 let prev = performance.now();
 let t = 0;

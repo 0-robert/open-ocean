@@ -19,7 +19,7 @@ export const config = {
   },
   // JONSWAP display params (see buildSpectrumParams).
   spectrum: {
-    scale: 1.0, windSpeed: 25.0, windDirection: 360.0, fetch: 100000,
+    scale: 1.3, windSpeed: 25.0, windDirection: 360.0, fetch: 100000,
     spreadBlend: 1.0, swell: 0.3, peakEnhancement: 3.3, shortWavesFade: 0.02,
   },
   mesh: { tiles: 1000, quadRes: 0.8 },    // grid extent (world units) and vertices per unit
@@ -41,8 +41,8 @@ export const config = {
   },
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   foam: {
-    bias: 0.6, threshold: 0.0, add: 0.15, amount: 4.2,
-    decay: 0.968,       // per-frame foam persistence (tuned)
+    bias: 0.6 , threshold: 0.0, add: 0.15, amount: 4.2,
+    decay: 0.978,       // per-frame foam persistence (tuned)
     injectRate: 1.0,
     flow: 0.002,        // uv advection/frame (foam drifts downwind)
     wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)

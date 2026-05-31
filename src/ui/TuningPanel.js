@@ -10,6 +10,19 @@ const hex = (rgb) => '#' + new THREE.Color(rgb[0], rgb[1], rgb[2]).getHexString(
 export function createTuningPanel({ renderer, oceanMat, sim, config }) {
   const gui = new GUI({ title: 'Ocean / Boat Tuning' });
   const u = oceanMat.uniforms;
+
+  // ✕ button in the title bar that removes (destroys) the panel entirely.
+  const titleEl = gui.$title;
+  titleEl.style.position = 'relative';
+  const closeBtn = document.createElement('span');
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Close panel';
+  closeBtn.setAttribute('role', 'button');
+  closeBtn.style.cssText =
+    'position:absolute;top:0;right:8px;display:flex;align-items:center;height:100%;' +
+    'font-size:13px;cursor:pointer;opacity:0.7;';
+  closeBtn.addEventListener('click', (e) => { e.stopPropagation(); gui.destroy(); });
+  titleEl.appendChild(closeBtn);
   const setFlow = (v) => {
     const a = (config.spectrum.windDirection / 180) * Math.PI;
     sim.foamUniforms.uFlow.value.set(Math.cos(a), Math.sin(a)).multiplyScalar(v);

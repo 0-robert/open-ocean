@@ -16,3 +16,6 @@ dist/
 BOAT_INTEGRATION_ATTEMPT.md
 scripts/ocean-probe.png
 skills-lock.json
+
+# 3D models are not redistributed (e.g. the Sketchfab-licensed boat) — keep local only
+public/models/

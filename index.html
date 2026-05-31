@@ -18,6 +18,9 @@
          browser pan/zoom gestures (needed for orbit + pinch on mobile). */
       canvas { display: block; touch-action: none; }
 
+      /* hide the lil-gui settings panel on touch devices (mobile / tablet) */
+      @media (pointer: coarse) { .lil-gui { display: none !important; } }
+
       /* Landscape gate: on a portrait touch device, cover everything and ask the
          user to rotate. Hides automatically the moment they're in landscape. */
       #rotate {

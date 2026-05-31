@@ -1,15 +1,15 @@
 # Open Ocean 🌊
 
-A real-time, **Sea-of-Thieves-style ocean** that runs in the browser — a Tessendorf
+A real-time, **Sea-of-Thieves-style ocean** that runs in the browser - a Tessendorf
 **FFT** wave simulation (JONSWAP spectrum, stacked cascades) with stylized
 subsurface-scatter shading, persistent foam, and a **sailable boat** driven by real
 rigid-body buoyancy.
 
-The entire FFT runs on the **GPU** via fragment-shader ping-pong — no compute shaders —
+The entire FFT runs on the **GPU** via fragment-shader ping-pong - no compute shaders -
 so it works on WebGL2 (i.e. most laptops and phones), not just bleeding-edge hardware.
 
 <p align="center">
-  <img src="docs/demo.webp" width="100%" alt="FFT ocean — a small boat sailing rough turquoise seas">
+  <img src="docs/demo.webp" width="100%" alt="FFT ocean - a small boat sailing rough turquoise seas">
 </p>
 
 Built with [three.js](https://threejs.org) + WebGL2 + [Vite](https://vitejs.dev).
@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-That's it — you'll get the full ocean immediately. The boat is optional (see below).
+That's it - you'll get the full ocean immediately. The boat is optional (see below).
 
 Other scripts:
 
@@ -63,7 +63,7 @@ Other scripts:
 
 ## Adding the boat (optional)
 
-The ocean runs on its own — **the boat is not required**, and the model is **not
+The ocean runs on its own - **the boat is not required**, and the model is **not
 bundled** in this repo (the one in the demo is under the Sketchfab Standard License,
 which forbids redistributing the files). Without a model you simply see the open sea;
 with one you get a sailable, physically-buoyant boat.
@@ -90,7 +90,7 @@ Anything under `public/` is served at the site root, so the path the code reques
 | Input | Action |
 |---|---|
 | **W / S** | Throttle forward / reverse |
-| **A / D** | Steer (rudder authority scales with speed — no speed, no turn) |
+| **A / D** | Steer (rudder authority scales with speed - no speed, no turn) |
 | **Mouse drag** | Orbit the camera |
 | **Scroll** | Zoom in / out |
 | **✕** (top-right panel) | Removes the live tuning panel; reload to bring it back |
@@ -102,7 +102,7 @@ render a raw FFT cascade texture fullscreen (useful when hacking on the shaders)
 
 ## Configuration & live tuning
 
-Every tunable lives in [`src/config.js`](src/config.js) — wave height, choppiness, wind
+Every tunable lives in [`src/config.js`](src/config.js) - wave height, choppiness, wind
 speed/direction, JONSWAP spectrum, foam behaviour, water colors, lighting, fog, and the
 boat's buoyancy/handling.
 
@@ -118,15 +118,15 @@ defaults. Click the panel's **✕** to dismiss it.
 The simulation is a GPU implementation of Jerry Tessendorf's *Simulating Ocean Water*.
 Each frame, per cascade:
 
-1. **Spectrum** — a JONSWAP wave spectrum seeds an initial frequency-domain field `H₀`.
-2. **Time evolution** — `H₀` is advanced to the current time using the deep/finite-depth
+1. **Spectrum** - a JONSWAP wave spectrum seeds an initial frequency-domain field `H₀`.
+2. **Time evolution** - `H₀` is advanced to the current time using the deep/finite-depth
    dispersion relation `ω = √(g·k·tanh(k·d))`.
-3. **Inverse FFT** — the spectrum is transformed back to a spatial height/displacement
+3. **Inverse FFT** - the spectrum is transformed back to a spatial height/displacement
    field with a GPU inverse FFT: ping-ponging between two render targets, driven by a
    **precomputed butterfly (twiddle) texture**, instead of a compute shader.
-4. **Assembly** — height + horizontal (choppy) displacement + slope/normal maps are
+4. **Assembly** - height + horizontal (choppy) displacement + slope/normal maps are
    packed into textures.
-5. **Foam** — whitecaps are derived from the wave Jacobian and accumulated into a buffer
+5. **Foam** - whitecaps are derived from the wave Jacobian and accumulated into a buffer
    that **persists, advects downwind, and decays**, so foam streaks trail realistically.
 
 Several **cascades** at non-harmonic patch sizes (swell / waves / ripples) are summed so
@@ -174,14 +174,14 @@ open-ocean/
 
 ## Deployment
 
-It's a static Vite site — `npm run build` produces a self-contained `dist/` you can host
+It's a static Vite site - `npm run build` produces a self-contained `dist/` you can host
 anywhere (Cloudflare Pages, Netlify, Vercel, GitHub Pages, S3, …).
 
 > ⚠️ **The boat model isn't in the repo.** A CI/Git-connected build won't include it. To
 > ship a demo *with* the boat, build locally (where your model lives in
 > `public/models/boat/`) and upload the resulting `dist/` directly.
 
-### Cloudflare Pages — direct upload (includes the boat) — recommended
+### Cloudflare Pages - direct upload (includes the boat) - recommended
 
 ```bash
 npm install
@@ -192,7 +192,7 @@ npx wrangler pages deploy dist --project-name open-ocean
 The first run logs you into Cloudflare in the browser, creates the Pages project, and
 returns a `open-ocean.pages.dev` URL. Re-run the same command to redeploy.
 
-### Cloudflare Pages — Git integration (auto-deploy, no boat)
+### Cloudflare Pages - Git integration (auto-deploy, no boat)
 
 Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → select this repo, then:
 
@@ -224,9 +224,9 @@ orbit-camera clamps, and the height sampler.
 ## Performance notes
 
 - **No compute shaders.** The whole FFT is fragment-shader ping-pong, so it runs on plain
-  WebGL2 — broad device support, including mobile.
+  WebGL2 - broad device support, including mobile.
 - **Windowed read-back.** Boat buoyancy reads only a small `W×W` window of the height
-  texture around the hull (O(W²)) instead of the full `N×N` map (O(N²)) — ~60× less
+  texture around the hull (O(W²)) instead of the full `N×N` map (O(N²)) - ~60× less
   per-frame read-back, which avoids the `readPixels` GPU stall.
 - **Cascade frequency bands.** Each cascade is band-limited by wavenumber so stacking them
   doesn't double-count overlapping frequencies.
@@ -238,13 +238,13 @@ the number of `sim.cascades`, and `mesh.quadRes` (surface tessellation).
 
 ## Credits & licensing
 
-Code in `src/` is **MIT** — see [`LICENSE`](LICENSE). Third-party:
+Code in `src/` is **MIT** - see [`LICENSE`](LICENSE). Third-party:
 
-- **three.js**, **lil-gui** — MIT.
+- **three.js**, **lil-gui** - MIT.
 - The FFT/JONSWAP approach follows Tessendorf's *Simulating Ocean Water* and was informed
   by [GarrettGunnell/Water](https://github.com/GarrettGunnell/Water); the GLSL here is an
   original WebGL2 implementation.
-- **Boat model** — *not included*; the demo used *"Small Sailing Boat"* by **kraffing**
-  (Sketchfab Standard License — not redistributed here; see
+- **Boat model** - *not included*; the demo used *"Small Sailing Boat"* by **kraffing**
+  (Sketchfab Standard License - not redistributed here; see
   [Adding the boat](#adding-the-boat-optional)).
-- `public/textures/waternormals.jpg` — from the three.js examples.
+- `public/textures/waternormals.jpg` - from the three.js examples.

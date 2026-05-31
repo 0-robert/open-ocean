@@ -60,9 +60,9 @@ export const config = {
     fog: [0.7, 0.82, 0.92],
   },
   lighting: {
-    roughness: 0.14, normalStrength: 0.5,
+    roughness: 0.14, normalStrength: 0.35,
     wavePeakScatterStrength: 2.0, scatterStrength: 0.9,
-    scatterShadowStrength: 0.25, environmentLightStrength: 0.45, bubbleDensity: 0.4,
+    scatterShadowStrength: 0.25, environmentLightStrength: 1.05, bubbleDensity: 0.4,
     heightModifier: 0.6,
   },
 };

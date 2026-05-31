@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  server: { open: true, allowedHosts: ["localhost"] },
+  server: { open: true },
 });

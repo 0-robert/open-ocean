@@ -1,15 +1,18 @@
 node_modules/
 dist/
-.superpowers/
 .DS_Store
 
-scripts/ocean-probe.png
+# local agent / tooling config (not part of the project)
+.agents/
+.claude/
+.superpowers/
 
-# user assets/screenshots
+# scratch, references, captured media
 *.zip
+*.txt
+*.gif
 /image.png
 /image copy*.png
-
-# copyrighted transcripts / scratch
-*.txt
 BOAT_INTEGRATION_ATTEMPT.md
+scripts/ocean-probe.png
+skills-lock.json

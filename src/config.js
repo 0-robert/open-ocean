@@ -5,7 +5,7 @@ export const config = {
     depth: 50,              // moderately deep so swells come through without exploding
     repeatTime: 200,        // seconds before the sim loops
     speed: 1.0,
-    lambda: [0.9, 0.9],     // horizontal (choppy) displacement strength [x, z]
+    lambda: [0.55, 0.55],   // horizontal (choppy) displacement strength [x, z]
     displacementScale: 0.75, // global wave-height multiplier (visibility)
     seed: 0,
     // Stacked FFT cascades at different patch sizes + frequency bands (wavenumber
@@ -42,7 +42,7 @@ export const config = {
   fog: { near: 240, far: 560 },           // pulled in so the plane edge dissolves into the horizon
   bloom: { strength: 0.15, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: {
-    bias: 0.96, threshold: 0.0, add: 0.15, amount: 4.2,
+    bias: 0.6, threshold: 0.0, add: 0.15, amount: 4.2,
     decay: 0.986,       // per-frame foam persistence (tuned)
     injectRate: 1.0,
     flow: 0.002,        // uv advection/frame (foam drifts downwind)
@@ -61,7 +61,7 @@ export const config = {
     fog: [0.7, 0.82, 0.92],
   },
   lighting: {
-    roughness: 0.14, normalStrength: 0.85,
+    roughness: 0.14, normalStrength: 0.5,
     wavePeakScatterStrength: 2.0, scatterStrength: 0.9,
     scatterShadowStrength: 0.25, environmentLightStrength: 0.45, bubbleDensity: 0.4,
     heightModifier: 0.6,

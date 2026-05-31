@@ -98,15 +98,24 @@ const FOAM_FRAG = /* glsl */`
   precision highp float;
   uniform sampler2D uInject;   // displacement target; .a = instantaneous Jacobian foam
   uniform sampler2D uPrev;     // previous accumulated foam (.r)
-  uniform float uN, uDecay, uInjectRate;
+  uniform float uN, uDecay, uInjectRate, uLengthScale, uWake, uWakeRadius;
   uniform vec2 uFlow;          // uv advection per frame
+  uniform vec2 uBoatXZ;        // boat world position (for wake injection)
   out vec4 outColor;
   void main() {
     ivec2 id = ivec2(gl_FragCoord.xy);
     vec2 uv = (vec2(id) + 0.5) / uN;
     float prev = texture(uPrev, uv - uFlow).r;
-    float inject = texelFetch(uInject, id, 0).a;
-    float foam = max(prev * uDecay, inject * uInjectRate);
+    float inject = texelFetch(uInject, id, 0).a * uInjectRate;
+
+    // Boat wake: inject foam near the hull's path (tiling-aware world distance).
+    vec2 fragW = uv * uLengthScale;
+    vec2 d = fragW - mod(uBoatXZ, uLengthScale);
+    d -= uLengthScale * floor(d / uLengthScale + 0.5); // wrap to nearest tile
+    float wake = uWake * smoothstep(uWakeRadius, 0.0, length(d));
+    inject = max(inject, wake);
+
+    float foam = max(prev * uDecay, inject);
     outColor = vec4(clamp(foam, 0.0, 1.0), 0.0, 0.0, 1.0);
   }
 `;
@@ -169,8 +178,17 @@ export class OceanSim {
       uInject: { value: null }, uPrev: { value: null }, uN: { value: N },
       uDecay: { value: config.foam.decay }, uInjectRate: { value: config.foam.injectRate },
       uFlow: { value: new THREE.Vector2(Math.cos(windRad), Math.sin(windRad)).multiplyScalar(config.foam.flow) },
+      uLengthScale: { value: 0 },
+      uBoatXZ: { value: new THREE.Vector2(0, 0) },
+      uWake: { value: 0 },
+      uWakeRadius: { value: config.foam.wakeRadius },
     };
     this.foamPass = new FullscreenPass(FOAM_FRAG, this.foamUniforms);
+
+    // Wake state, set by main each frame (boat position + speed-scaled strength).
+    this.wakeX = 0;
+    this.wakeZ = 0;
+    this.wakeStrength = 0;
   }
 
   /** @param time seconds (already scaled by sim speed) */
@@ -200,12 +218,15 @@ export class OceanSim {
 
     // Foam accumulation (ping-pong) for the foam-contributing cascades.
     const fu = this.foamUniforms;
+    fu.uBoatXZ.value.set(this.wakeX, this.wakeZ);
+    fu.uWake.value = this.wakeStrength;
     for (let i = 0; i < this.foamCount; i++) {
       const cascade = this.cascades[i];
       const prev = cascade.foamCurr === 0 ? cascade.foamPing : cascade.foamPong;
       const next = cascade.foamCurr === 0 ? cascade.foamPong : cascade.foamPing;
       fu.uInject.value = cascade.displacement.texture;
       fu.uPrev.value = prev.texture;
+      fu.uLengthScale.value = cascade.lengthScale;
       this.foamPass.render(this.renderer, next);
       cascade.foamCurr ^= 1;
       cascade.foamTexture = next.texture;

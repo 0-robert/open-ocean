@@ -144,6 +144,11 @@ renderer.setAnimationLoop((now) => {
   prev = now;
   t += dt * config.sim.speed;
 
+  // Boat wake: inject foam along the hull path, scaled by speed (none when idle).
+  sim.wakeX = boat.worldX;
+  sim.wakeZ = boat.worldZ;
+  sim.wakeStrength = boat.loaded ? config.foam.wakeStrength * Math.min(Math.abs(boat.speed) / 4, 1) : 0;
+
   sim.update(t);
   const disp = sim.displacementTextures;
   const slope = sim.slopeTextures;

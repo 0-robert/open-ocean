@@ -1,5 +1,5 @@
 {
-  "name": "fft-ocean",
+  "name": "open-ocean",
   "version": "1.0.0",
   "description": "Real-time FFT ocean water simulation in the browser (three.js + WebGL2) with a sailable, physically-buoyant boat.",
   "license": "MIT",

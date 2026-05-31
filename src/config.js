@@ -43,13 +43,13 @@ export const config = {
   bloom: { strength: 0.15, radius: 0.25, threshold: 0.95 }, // subtle glow on brightest foam/specular only
   foam: {
     bias: 0.6, threshold: 0.0, add: 0.15, amount: 4.2,
-    decay: 0.999,       // per-frame foam persistence (tuned)
+    decay: 0.968,       // per-frame foam persistence (tuned)
     injectRate: 1.0,
     flow: 0.002,        // uv advection/frame (foam drifts downwind)
     wakeStrength: 0.6,  // foam injected along the boat's path (scaled by speed)
     wakeRadius: 5.0,    // world-unit radius of the wake foam
     wakeOffset: 5.0,    // how far behind the stern the wake is injected
-    wakeDecay: 0.992,   // wake-trail persistence per frame (higher = longer trail)
+    wakeDecay: 0.999,   // wake-trail persistence per frame (higher = longer trail)
   },
   colors: {
     deep: [0.0, 0.667, 1.0],         // 00aaff (tuned)

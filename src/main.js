@@ -166,6 +166,7 @@ renderer.setAnimationLoop((now) => {
   water.position.x = Math.round(boat.worldX / cell) * cell;
   water.position.z = Math.round(boat.worldZ / cell) * cell;
 
+  sampler.setCenter(boat.worldX, boat.worldZ); // read back only the window around the boat
   sampler.refresh();
   boat.update(sampler, dt, controls.keys);
 

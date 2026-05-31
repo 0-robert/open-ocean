@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Open Ocean</title>
     <style>
+      @font-face {
+        font-family: 'Space Grotesk'; font-style: normal; font-weight: 400;
+        font-display: swap; src: url('/fonts/SpaceGrotesk-Regular.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Space Grotesk'; font-style: normal; font-weight: 700;
+        font-display: swap; src: url('/fonts/SpaceGrotesk-Bold.ttf') format('truetype');
+      }
       html, body { margin: 0; height: 100%; overflow: hidden; background: #0a2a3a; overscroll-behavior: none; }
       /* touch-action:none routes touch drags to our pointer handlers instead of
          browser pan/zoom gestures (needed for orbit + pinch on mobile). */
@@ -17,10 +25,12 @@
         flex-direction: column; align-items: center; justify-content: center;
         gap: 18px; text-align: center; padding: 24px;
         background: radial-gradient(circle at 50% 40%, #15506b, #0a2a3a 80%);
-        color: #eaf6ff; font: 500 18px/1.4 system-ui, -apple-system, sans-serif;
+        color: #eaf6ff;
+        font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+        font-weight: 700; font-size: 18px; line-height: 1.4;
       }
       #rotate .icon { font-size: 56px; animation: tip 1.8s ease-in-out infinite; }
-      #rotate small { color: #9fc4d8; font-size: 14px; }
+      #rotate small { color: #9fc4d8; font-size: 14px; font-weight: 400; }
       @keyframes tip { 0%,55%,100% { transform: rotate(0); } 75% { transform: rotate(-90deg); } }
       @media (orientation: portrait) and (pointer: coarse) {
         #rotate { display: flex; }

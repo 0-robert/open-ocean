@@ -7,7 +7,7 @@ const hex = (rgb) => '#' + new THREE.Color(rgb[0], rgb[1], rgb[2]).getHexString(
  * Live tuning panel. Every slider updates the running uniforms immediately.
  * @param {{renderer, oceanMat, sim, config}} refs
  */
-export function createTuningPanel({ renderer, oceanMat, sim, config }) {
+export function createTuningPanel({ renderer, oceanMat, sim, config, pixelPass }) {
   const gui = new GUI({ title: 'Ocean / Boat Tuning' });
   const u = oceanMat.uniforms;
 
@@ -82,6 +82,13 @@ export function createTuningPanel({ renderer, oceanMat, sim, config }) {
   const fp = gui.addFolder('Fog');
   fp.add(config.fog, 'near', 0, 1500, 10).onChange((v) => (u.uFogNear.value = v));
   fp.add(config.fog, 'far', 100, 5000, 10).onChange((v) => (u.uFogFar.value = v));
+
+  // ---- Pixelate (for fun) ----
+  if (pixelPass) {
+    const fx = gui.addFolder('Pixelate');
+    fx.add(config.post, 'pixelate').name('enabled').onChange((v) => (pixelPass.enabled = v));
+    fx.add(config.post, 'pixelSize', 1, 32, 1).name('block size').onChange((v) => (pixelPass.uniforms.uPixelSize.value = v));
+  }
 
   return gui;
 }

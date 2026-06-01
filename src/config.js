@@ -65,4 +65,8 @@ export const config = {
     scatterShadowStrength: 0.25, environmentLightStrength: 1.05, bubbleDensity: 0.4,
     heightModifier: 0.6,
   },
+  post: {
+    pixelate: true,  // retro pixelation post-pass (toggle in the tuning panel)
+    pixelSize: 6,    // screen pixels per block
+  },
 };

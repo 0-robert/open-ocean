@@ -13,6 +13,7 @@ import { createOceanMaterial } from './ocean/oceanMaterial.js';
 import { Boat } from './objects/Boat.js';
 import { createTuningPanel } from './ui/TuningPanel.js';
 import { createTouchControls } from './ui/TouchControls.js';
+import { createPixelatePass } from './post/pixelate.js';
 
 const canvas = document.getElementById('app');
 const renderer = createRenderer(canvas);
@@ -89,11 +90,17 @@ scene.add(keyLight);
 // --- Post: tonemapping / color-space pass ---
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
+const pixelPass = createPixelatePass(config.post.pixelSize);
+pixelPass.enabled = config.post.pixelate;
+composer.addPass(pixelPass);
 composer.addPass(new OutputPass());
-window.addEventListener('resize', () => composer.setSize(window.innerWidth, window.innerHeight));
+window.addEventListener('resize', () => {
+  composer.setSize(window.innerWidth, window.innerHeight);
+  pixelPass.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+});
 
 // Live tuning panel (the ✕ in its title bar removes it entirely).
-createTuningPanel({ renderer, oceanMat, sim, config });
+createTuningPanel({ renderer, oceanMat, sim, config, pixelPass });
 
 let prev = performance.now();
 let t = 0;
